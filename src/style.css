@@ -33,8 +33,35 @@ a{color:var(--cyan);text-decoration:none;}
 a:hover{text-decoration:underline;}
 ::selection{background:rgba(53,201,255,.28);}
 
+/* ---- ambient sharks (decorative background) ---- */
+.ocean{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+.shark{position:absolute;left:0;will-change:transform;color:var(--cyan);
+  filter:drop-shadow(0 0 14px rgba(53,201,255,.35));}
+.shark-svg{display:block;width:100%;height:auto;}
+.shark-svg path{fill:currentColor;}
+.shark-svg .eye{fill:var(--bg);}
+/* three depth layers: size, vertical band, speed, opacity, delay all differ */
+.shark-1{top:16vh;width:230px;opacity:.16;animation:swim 52s linear infinite;}
+.shark-2{top:58vh;width:150px;opacity:.10;animation:swim 74s linear infinite;animation-delay:-24s;}
+.shark-3{top:78vh;width:330px;opacity:.06;animation:swim 104s linear infinite;animation-delay:-60s;}
+.shark-inner{animation:bob 4.5s ease-in-out infinite;}
+.shark-2 .shark-inner{animation-duration:6s;}
+.shark-3 .shark-inner{animation-duration:8s;}
+@keyframes swim{
+  0%   {transform:translateX(-32vw) translateY(0)   scaleX(1);}
+  47%  {transform:translateX(122vw) translateY(5vh) scaleX(1);}
+  50%  {transform:translateX(122vw) translateY(5vh) scaleX(-1);}
+  97%  {transform:translateX(-32vw) translateY(-4vh) scaleX(-1);}
+  100% {transform:translateX(-32vw) translateY(0)   scaleX(1);}
+}
+@keyframes bob{
+  0%,100%{transform:translateY(0) rotate(-2deg);}
+  50%    {transform:translateY(7px) rotate(2deg);}
+}
+@media(prefers-reduced-motion:reduce){.ocean{display:none;}}
+
 /* ---- layout ---- */
-.wrap{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh;}
+.wrap{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh;position:relative;z-index:1;}
 
 /* ---- sidebar ---- */
 aside{
