@@ -7,6 +7,7 @@ import arpMitm from "./arp-mitm.js";
 import hostId from "./host-id.js";
 import tunnelling from "./tunnelling.js";
 import ftpAnalysis from "./ftp-analysis.js";
+import httpAnalysis from "./http-analysis.js";
 import smtpEmail from "./smtp-email.js";
 import emailAuth from "./email-auth.js";
 import iocDefang from "./ioc-defang.js";
@@ -22,6 +23,7 @@ export const sections = [
   hostId,
   tunnelling,
   ftpAnalysis,
+  httpAnalysis,
   smtpEmail,
   emailAuth,
   iocDefang,
