@@ -48,23 +48,24 @@ a:hover{text-decoration:underline;}
   100% {transform:translateY(-48px);opacity:0;}
 }
 
-/* the sharks */
-.shark{position:absolute;left:0;will-change:transform;color:var(--cyan);
-  filter:drop-shadow(0 0 6px rgba(53,201,255,.55)) drop-shadow(0 0 16px rgba(53,201,255,.30));}
-.shark-svg{display:block;width:100%;height:auto;}
-/* three depth layers: size, vertical band, speed, opacity, delay all differ */
-.shark-1{top:15vh;width:250px;opacity:.55;animation:swim 52s linear infinite;}
-.shark-2{top:55vh;width:165px;opacity:.34;animation:swim 74s linear infinite;animation-delay:-24s;}
-.shark-3{top:80vh;width:350px;opacity:.20;animation:swim 104s linear infinite;animation-delay:-60s;}
-.shark-inner{animation:bob 5s ease-in-out infinite;}
+/* the sharks (image faces LEFT by default) */
+.shark{position:absolute;left:0;will-change:transform;
+  filter:drop-shadow(0 0 10px rgba(53,201,255,.30));}
+.shark-inner{width:100%;aspect-ratio:900/491;
+  background:url("./assets/cyber-shark.png") center/contain no-repeat;
+  animation:bob 5s ease-in-out infinite;}
 .shark-2 .shark-inner{animation-duration:6.5s;}
 .shark-3 .shark-inner{animation-duration:8.5s;}
+/* three depth layers: size, vertical band, speed, opacity, delay all differ */
+.shark-1{top:14vh;width:300px;opacity:.85;animation:swim 58s linear infinite;}
+.shark-2{top:55vh;width:200px;opacity:.5;animation:swim 82s linear infinite;animation-delay:-30s;}
+.shark-3{top:78vh;width:420px;opacity:.28;animation:swim 116s linear infinite;animation-delay:-66s;}
 @keyframes swim{
-  0%   {transform:translateX(-34vw) translateY(0)   scaleX(1);}
-  47%  {transform:translateX(124vw) translateY(5vh) scaleX(1);}
-  50%  {transform:translateX(124vw) translateY(5vh) scaleX(-1);}
-  97%  {transform:translateX(-34vw) translateY(-4vh) scaleX(-1);}
-  100% {transform:translateX(-34vw) translateY(0)   scaleX(1);}
+  0%   {transform:translateX(124vw) translateY(0)   scaleX(1);}
+  47%  {transform:translateX(-46vw) translateY(5vh) scaleX(1);}
+  50%  {transform:translateX(-46vw) translateY(5vh) scaleX(-1);}
+  97%  {transform:translateX(124vw) translateY(-4vh) scaleX(-1);}
+  100% {transform:translateX(124vw) translateY(0)   scaleX(1);}
 }
 @keyframes bob{
   0%,100%{transform:translateY(0) rotate(-1.5deg);}
