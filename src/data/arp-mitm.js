@@ -64,5 +64,17 @@ export default {
         { t: "note", kind: "danger", title: "expert-info gotcha", text: "Wireshark's duplicate-address warning shows only the <b>second</b> occurrence of the conflict. Identifying which of the two MACs is the impostor is the analyst's job — knowing the real network layout (which MAC is really the gateway) is what breaks the tie." },
       ],
     },
+    {
+      title: "Counting sniffed credentials (form-based logins)",
+      desc: "What the attacker actually harvested from cleartext HTTP.",
+      span2: true,
+      blocks: [
+        { t: "note", kind: "info", title: "filter the FIELD, not the container", text: "\"How many credential submissions\" is answered by the <b>password form field</b> — not the method (<code>POST</code>) or the page (<code>userinfo.php</code>). Method/endpoint get you close; the field is the truth. First expand a POST → <b>HTML Form URL Encoded</b> to learn the field name (vulnweb uses <code>uname</code>/<code>pass</code>)." },
+        { t: "cmd", label: "credential submissions the attacker sniffed", code: "eth.addr == <attacker-mac> && http && urlencoded-form.key == pass" },
+        { t: "cmd", label: "byte-string fallback if urlencoded-form isn't available", code: "http.request.method == \"POST\" && http contains \"pass=\"" },
+        { t: "note", kind: "danger", title: "Tools → Credentials has a blind spot", text: "Wireshark's <code>Tools → Credentials</code> only harvests <b>HTTP Basic Auth</b> (Authorization header), FTP, IMAP, POP, SMTP — <b>NOT</b> HTML form logins. A form-based login (like vulnweb) shows an <b>empty</b> Credentials dialog. Hunt those manually with <code>urlencoded-form</code>." },
+        { t: "note", kind: "warn", title: "why endpoint-counting lies", text: "Registration forms hit a different endpoint AND may name their password field differently, so they won't match <code>urlencoded-form.key == pass</code>. Empty/partial POSTs to the login page also drop out. Counting <code>POST</code>s to <code>userinfo.php</code> over-counts; the field filter self-corrects." },
+      ],
+    },
   ],
 };
