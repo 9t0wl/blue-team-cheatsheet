@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLUE//TEAM — SOC Cheatsheet</title>
+<meta name="description" content="Technical blue team / SOC analyst cheatsheet — Wireshark, Nmap detection, phishing, log pivoting, detection engineering.">
+<style>
+  :root{
+    --bg:#070b12;
+    --bg2:#0b1220;
+    --panel:#0d1524;
+    --panel2:#111b2e;
+    --border:#1b2a42;
+    --border2:#25384f;
+    --ink:#cdd9e5;
+    --ink-dim:#8aa0b8;
+    --muted:#5f7690;
+    --cyan:#35c9ff;
+    --blue:#3b82f6;
+    --blue-dim:#1e3a5f;
+    --green:#3fdc7a;
+    --amber:#f5b944;
+    --red:#ff5c6c;
+    --violet:#a78bfa;
+    --glow:0 0 0 1px rgba(53,201,255,.15), 0 0 22px -6px rgba(53,201,255,.35);
+    --mono:"JetBrains Mono","Cascadia Code","Fira Code",Consolas,"SF Mono",Menlo,monospace;
+    --sans:"Inter",-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;scroll-padding-top:80px;}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--sans);font-size:14px;line-height:1.55;
+    background-image:
+      linear-gradient(rgba(53,201,255,.025) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(53,201,255,.025) 1px,transparent 1px),
+      radial-gradient(1200px 600px at 80% -10%,rgba(59,130,246,.10),transparent);
+    background-size:36px 36px,36px 36px,100% 100%;
+  }
+  a{color:var(--cyan);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  ::selection{background:rgba(53,201,255,.28);}
+  /* ---- layout ---- */
+  .wrap{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh;}
+  /* ---- sidebar ---- */
+  aside{
+    position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;
+    background:linear-gradient(180deg,var(--bg2),var(--bg));
+    border-right:1px solid var(--border);padding:20px 14px;
+  }
+  .brand{display:flex;flex-direction:column;gap:2px;padding:0 6px 14px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+  .brand .logo{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.5px;color:#fff;}
+  .brand .logo b{color:var(--cyan);text-shadow:0 0 14px rgba(53,201,255,.5);}
+  .brand .sub{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.5px;}
+  .prog{margin:12px 6px 6px;}
+  .prog .lbl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--ink-dim);margin-bottom:5px;}
+  .prog .bar{height:6px;border-radius:6px;background:var(--panel2);overflow:hidden;border:1px solid var(--border);}
+  .prog .fill{height:100%;width:40%;background:linear-gradient(90deg,var(--blue),var(--cyan));box-shadow:0 0 12px rgba(53,201,255,.6);}
+  nav{margin-top:14px;display:flex;flex-direction:column;gap:1px;}
+  nav a{
+    font-family:var(--mono);font-size:12px;color:var(--ink-dim);
+    padding:7px 10px;border-radius:7px;border-left:2px solid transparent;
+    display:flex;align-items:center;gap:8px;
+  }
+  nav a .ic{opacity:.85;width:15px;text-align:center;}
+  nav a:hover{background:var(--panel);color:var(--ink);text-decoration:none;}
+  nav a.active{background:var(--panel2);color:var(--cyan);border-left-color:var(--cyan);}
+  .side-foot{margin-top:18px;padding:10px 8px 0;border-top:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.7;}
+  /* ---- main ---- */
+  main{min-width:0;padding:0 0 80px;}
+  .topbar{
+    position:sticky;top:0;z-index:20;backdrop-filter:blur(8px);
+    background:rgba(7,11,18,.82);border-bottom:1px solid var(--border);
+    padding:14px 32px;display:flex;gap:14px;align-items:center;
+  }
+  .search{flex:1;position:relative;max-width:640px;}
+  .search input{
+    width:100%;background:var(--panel);border:1px solid var(--border2);color:var(--ink);
+    font-family:var(--mono);font-size:13px;padding:10px 12px 10px 36px;border-radius:9px;outline:none;
+  }
+  .search input:focus{border-color:var(--cyan);box-shadow:var(--glow);}
+  .search .mag{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;}
+  .search .kbd{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:10px;color:var(--muted);border:1px solid var(--border2);border-radius:5px;padding:1px 6px;}
+  .count{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;}
+  .hero{padding:30px 32px 8px;}
+  .hero h1{font-family:var(--mono);font-size:22px;margin:0 0 6px;letter-spacing:.5px;color:#fff;}
+  .hero h1 b{color:var(--cyan);text-shadow:0 0 16px rgba(53,201,255,.45);}
+  .hero .tagline{color:var(--ink-dim);font-size:13px;max-width:70ch;}
+  .hero .meta{margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--muted);}
+  .hero .meta span{color:var(--green);}
+  /* ---- sections ---- */
+  section{padding:26px 32px 6px;}
+  .sec-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:16px;}
+  .sec-head h2{font-family:var(--mono);font-size:16px;margin:0;color:#fff;letter-spacing:.4px;}
+  .sec-head h2::before{content:"# ";color:var(--cyan);}
+  .sec-head .src{font-family:var(--mono);font-size:10.5px;color:var(--muted);border:1px solid var(--border2);border-radius:20px;padding:2px 10px;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+  .card{
+    background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--border);border-radius:12px;padding:16px 16px 6px;
+    position:relative;overflow:hidden;
+  }
+  .card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),transparent 60%);opacity:.6;}
+  .card.span2{grid-column:span 2;}
+  .card h3{font-family:var(--mono);font-size:13.5px;margin:0 0 4px;color:var(--cyan);}
+  .card .desc{color:var(--ink-dim);font-size:12.5px;margin:0 0 12px;}
+  /* blocks */
+  .cmd{position:relative;margin:0 0 12px;}
+  .cmd .clabel{font-family:var(--sans);font-size:11.5px;color:var(--ink-dim);margin-bottom:4px;}
+  .cmd pre{
+    margin:0;background:#060a11;border:1px solid var(--border2);border-radius:8px;
+    padding:10px 40px 10px 12px;overflow-x:auto;
+    font-family:var(--mono);font-size:12.5px;line-height:1.5;color:#e6f0fa;
+  }
+  .cmd pre .tok-flag{color:var(--amber);}
+  .cmd pre .tok-op{color:var(--violet);}
+  .cmd pre .tok-str{color:var(--green);}
+  .cmd pre .tok-num{color:var(--cyan);}
+  .cmd pre .tok-cmt{color:var(--muted);font-style:italic;}
+  .copy{
+    position:absolute;top:6px;right:6px;background:var(--panel2);border:1px solid var(--border2);
+    color:var(--ink-dim);border-radius:6px;font-family:var(--mono);font-size:10px;padding:3px 7px;cursor:pointer;
+  }
+  .copy:hover{color:var(--cyan);border-color:var(--cyan);}
+  .copy.ok{color:var(--green);border-color:var(--green);}
+  .note{border-radius:8px;padding:9px 12px;margin:0 0 12px;font-size:12.5px;border:1px solid;background:rgba(255,255,255,.02);}
+  .note .nt{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:3px;}
+  .note.warn{border-color:rgba(245,185,68,.4);} .note.warn .nt{color:var(--amber);}
+  .note.info{border-color:rgba(53,201,255,.35);} .note.info .nt{color:var(--cyan);}
+  .note.danger{border-color:rgba(255,92,108,.4);} .note.danger .nt{color:var(--red);}
+  .note.ok{border-color:rgba(63,220,122,.35);} .note.ok .nt{color:var(--green);}
+  .note code,.desc code,.txt code,td code{font-family:var(--mono);font-size:.92em;background:rgba(53,201,255,.10);color:#bfe6ff;padding:1px 5px;border-radius:4px;}
+  .txt{font-size:12.5px;color:var(--ink);margin:0 0 12px;}
+  table.tbl{width:100%;border-collapse:collapse;margin:0 0 12px;font-size:12px;}
+  table.tbl th{font-family:var(--mono);text-align:left;color:var(--ink-dim);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;padding:6px 8px;border-bottom:1px solid var(--border2);}
+  table.tbl td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top;}
+  table.tbl td:first-child{font-family:var(--mono);color:#bfe6ff;white-space:nowrap;}
+  table.tbl tr:last-child td{border-bottom:none;}
+  ol.steps{margin:0 0 12px;padding-left:18px;font-size:12.5px;}
+  ol.steps li{margin-bottom:6px;}
+  ol.steps code{font-family:var(--mono);font-size:.92em;background:rgba(53,201,255,.10);color:#bfe6ff;padding:1px 5px;border-radius:4px;}
+  .no-results{padding:60px 32px;text-align:center;color:var(--muted);font-family:var(--mono);display:none;}
+  footer{border-top:1px solid var(--border);margin-top:30px;padding:14px 32px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+  footer .dot{color:var(--green);}
+  .menu-btn{display:none;}
+  /* ---- responsive ---- */
+  @media(max-width:860px){
+    .wrap{grid-template-columns:1fr;}
+    aside{position:fixed;z-index:40;width:260px;transform:translateX(-100%);transition:transform .2s;}
+    aside.open{transform:translateX(0);}
+    .menu-btn{display:inline-flex;background:var(--panel);border:1px solid var(--border2);color:var(--cyan);border-radius:8px;padding:8px 11px;font-family:var(--mono);cursor:pointer;font-size:13px;}
+    .card.span2{grid-column:span 1;}
+    .cards{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <aside id="sidebar">
+    <div class="brand">
+      <span class="logo"><b>BLUE</b>//TEAM</span>
+      <span class="sub">SOC ANALYST // CHEATSHEET</span>
+    </div>
+    <div class="prog">
+      <div class="lbl"><span>SAL1 PATH</span><span id="progPct">40%</span></div>
+      <div class="bar"><div class="fill" id="progFill"></div></div>
+    </div>
+    <nav id="nav"></nav>
+    <div class="side-foot">
+      <div>[<span style="color:var(--green)">▲</span>] press <b style="color:var(--cyan)">/</b> to search</div>
+      <div>[<span style="color:var(--green)">▲</span>] click a filter to copy</div>
+      <div style="margin-top:6px;">red team → blue team</div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <button class="menu-btn" id="menuBtn">☰</button>
+      <div class="search">
+        <span class="mag">⌕</span>
+        <input id="search" type="text" placeholder="filter cheatsheet… (protocol, filter, technique)" autocomplete="off" spellcheck="false">
+        <span class="kbd">/</span>
+      </div>
+      <span class="count" id="count"></span>
+    </div>
+
+    <div class="hero">
+      <h1><b>SOC</b> / Blue Team Field Reference</h1>
+      <div class="tagline">Live, searchable cheatsheet built alongside the TryHackMe SOC L1 → SAL1 path. Detection filters, phishing forensics, log-pivoting, and framework references — read from the defender's side by someone who runs the attacks.</div>
+      <div class="meta">status: <span>ACTIVE</span> &nbsp;·&nbsp; sections: <span id="secCount">0</span> &nbsp;·&nbsp; entries: <span id="entryCount">0</span> &nbsp;·&nbsp; last build: <span id="buildDate">—</span></div>
+    </div>
+
+    <div id="content"></div>
+    <div class="no-results" id="noResults">// no matches — clear the filter to see everything</div>
+
+    <footer>
+      <span><span class="dot">●</span> BLUE//TEAM SOC CHEATSHEET</span>
+      <span>append notes in <b>cheatsheetData</b> · deploy via GitHub Pages</span>
+    </footer>
+  </main>
+</div>
+
+<script>
+/* =========================================================================
+   CHEATSHEET DATA  —  ADD NEW NOTES HERE
+   -------------------------------------------------------------------------
+   Structure:
+     { id, title, src, cards:[ { title, desc?, span2?, blocks:[ ... ] } ] }
+
+   Block types:
+     { t:"cmd",  label?, code:"tcp.flags == 2" }         // copyable code line(s)
+     { t:"note", kind:"warn|info|danger|ok", title?, text:"..." }  // callout (text may contain <code>)
+     { t:"txt",  text:"..." }                            // paragraph (may contain <code>)
+     { t:"table",head:["A","B"], rows:[["x","y"], ...] } // reference table
+     { t:"steps",items:["step one", "step two"] }        // ordered list
+
+   To add a room's notes: copy a section block, change id/title/src, fill cards.
+   ========================================================================= */
+const cheatsheetData = [
+  {
+    id:"wireshark-filters", title:"Wireshark — Core & Advanced Filters", src:"Wireshark: Packet Operations",
+    cards:[
+      { title:"Protocol filters by OSI layer",
+        blocks:[
+          { t:"table", head:["Filter","Shows"], rows:[
+            ["ip","All IP packets"],
+            ["ip.addr == 10.10.10.5","To OR from that IP (direction-agnostic)"],
+            ["ip.addr == 10.10.10.0/24","Anything involving that subnet"],
+            ["ip.src == x / ip.dst == x","Directional (from / to)"],
+            ["tcp.port == 80 / udp.port == 53","Transport port, either direction"],
+            ["tcp.srcport / tcp.dstport","Directional transport port"],
+            ["http / dns","All app-layer packets of that protocol"],
+            ["http.request.method == \"GET\"","HTTP GET requests"],
+            ["http.response.code == 200","HTTP response code 200"],
+          ]},
+          { t:"note", kind:"info", title:"key distinction", text:"<code>ip.addr</code> ignores direction; <code>ip.src</code>/<code>ip.dst</code> are directional. Same logic for <code>tcp.port</code> vs <code>tcp.srcport</code>/<code>tcp.dstport</code>." },
+        ]},
+      { title:"DNS query/response DUPLICATION trap", desc:"The classic doubled-count bug.",
+        blocks:[
+          { t:"note", kind:"warn", title:"meta-rule", text:"When a Wireshark count comes out ~<b>double</b> what you expect → suspect <b>query/response duplication</b> first, not protocol noise." },
+          { t:"txt", text:"<code>dns.qry.type == 1</code> matches A-record packets in <b>both directions</b> — a DNS response echoes the original question, so <code>dns.qry.type</code> exists in the query AND the response. Add a direction filter:" },
+          { t:"cmd", label:"queries only", code:"dns.qry.type == 1 && dns.flags.response == 0" },
+          { t:"cmd", label:"responses only", code:"dns.qry.type == 1 && dns.flags.response == 1" },
+          { t:"note", kind:"danger", title:"why !llmnr does NOT fix it", text:"<code>!llmnr</code> filters by <b>protocol</b> (LLMNR is a separate DNS-like protocol). The extra packets are DNS <b>responses</b>, not LLMNR — direction is the problem, not protocol contamination. A direction filter halves it; protocol exclusion can't." },
+          { t:"table", head:["#","Record","Purpose"], rows:[["1","A","IPv4 address"],["28","AAAA","IPv6 address"],["15","MX","Mail server"],["5","CNAME","Alias / canonical"]] },
+        ]},
+      { title:"string() + matches regex operator",
+        blocks:[
+          { t:"note", kind:"info", text:"<code>matches</code> is Wireshark's regex operator but works on <b>text only</b>. Integer fields (<code>ip.ttl</code>) must be converted with <code>string()</code> first." },
+          { t:"cmd", label:"even TTL (last digit even)", code:"string(ip.ttl) matches \"[02468]$\"" },
+          { t:"cmd", label:"odd TTL", code:"string(ip.ttl) matches \"[13579]$\"" },
+          { t:"txt", text:"<code>[02468]</code> = char class, <code>$</code> = end anchor → \"last digit is even.\" Parity is decided by the final digit, hence the end anchor." },
+        ]},
+      { title:"Checksum validation is preference-gated",
+        blocks:[
+          { t:"note", kind:"warn", text:"Wireshark leaves TCP/IP checksum validation <b>OFF by default</b> — modern NICs do checksum offloading, so outgoing packets legitimately show \"wrong\" checksums. Validating by default would flood you with false errors." },
+          { t:"steps", items:[
+            "Switch to a profile that enables validation (room uses <b>Checksum Control</b>) — right-click the profile name at the <b>bottom-right of the status bar</b>.",
+            "That profile turns ON \"Validate the TCP checksum if possible\" in TCP preferences.",
+            "Then filter bad checksums:" ]},
+          { t:"cmd", code:"tcp.checksum.status == \"Bad\"" },
+          { t:"txt", text:"Numeric equivalent: <code>== 0</code>. Without validation enabled, the filter returns nothing." },
+        ]},
+      { title:"Reading results correctly",
+        blocks:[
+          { t:"note", kind:"danger", title:"never hand-count rows", text:"Always take the count from <code>Displayed: N</code> in the bottom status bar — the packet list pane scrolls and silently hides matches above/below the viewport." },
+          { t:"txt", text:"<b>Filter buttons</b> (right end of the display-filter toolbar) are one-click saved filters — <b>profile-specific</b>. Create via <code>Analyze → Display Filter Buttons</code>. <b>Expression builder</b>: <code>Analyze → Display Filter Expression</code> lists every protocol's fields and valid value types." },
+        ]},
+    ]
+  },
+  {
+    id:"nmap-detection", title:"Wireshark — Nmap Scan Detection & TCP Flags", src:"Wireshark: Traffic Analysis",
+    cards:[
+      { title:"TCP flags are a bitmask", desc:"Why the decimal values look random — they're sums of set bits.", span2:true,
+        blocks:[
+          { t:"table", head:["Flag","Bit value","Meaning"], rows:[
+            ["FIN","1","Gracefully close connection"],
+            ["SYN","2","Start / synchronize a connection"],
+            ["RST","4","Abort / reject connection"],
+            ["PSH","8","Push buffered data to app now"],
+            ["ACK","16","Acknowledging received data"],
+            ["URG","32","Urgent pointer set"],
+          ]},
+          { t:"note", kind:"info", title:"the trick", text:"A packet's <code>tcp.flags</code> value is the <b>sum</b> of whichever bits are set. <code>18</code> = SYN(2)+ACK(16). <code>20</code> = RST(4)+ACK(16). Reconstruct any value instead of memorizing." },
+          { t:"table", head:["Match style","Example","Matches"], rows:[
+            ["Exact value","tcp.flags == 2","ONLY that exact bit set — every other flag 0 (strict)"],
+            ["Single bit","tcp.flags.syn == 1","That bit set — don't care about the rest (loose)"],
+          ]},
+          { t:"note", kind:"warn", text:"For scan-hunting the <b>loose</b> form is usually what you want — you're isolating a behaviour, not one exact packet shape. Field name for RST is <code>tcp.flags.reset</code> (not <code>.rst</code>)." },
+        ]},
+      { title:"TCP Connect scan  (nmap -sT)",
+        blocks:[
+          { t:"note", kind:"info", text:"<b>Completes</b> the full 3-way handshake. Default for <b>non-privileged</b> users. Window usually <b>&gt; 1024</b> — finished handshake expects real data." },
+          { t:"cmd", label:"detection filter", code:"tcp.flags.syn==1 and tcp.flags.ack==0 and tcp.window_size > 1024" },
+        ]},
+      { title:"TCP SYN scan  (nmap -sS)  — half-open / stealth",
+        blocks:[
+          { t:"note", kind:"info", text:"Does <b>NOT</b> finish the handshake — replies with RST instead of ACK. Requires <b>root</b>. Window usually <b>≤ 1024</b> — connection never finished, no data window needed." },
+          { t:"cmd", label:"detection filter", code:"tcp.flags.syn==1 and tcp.flags.ack==0 and tcp.window_size <= 1024" },
+          { t:"note", kind:"warn", title:"the -sT vs -sS tell", text:"Both are bare SYN packets. The <b>only</b> distinguishing signal is <b>window size</b>: <code>&gt; 1024</code> (connect) vs <code>&le; 1024</code> (stealth)." },
+        ]},
+      { title:"UDP scan  (nmap -sU)",
+        blocks:[
+          { t:"note", kind:"info", text:"No handshake. <b>Open port</b> → usually silent. <b>Closed port</b> → ICMP error Type 3 / Code 3 (destination unreachable, port unreachable). You detect UDP scans by the ICMP errors closed ports throw back." },
+          { t:"cmd", label:"detection filter", code:"icmp.type==3 and icmp.code==3" },
+          { t:"note", kind:"warn", title:"ICMP encapsulation", text:"An ICMP error carries a <b>copy of the original request</b> as encapsulated data. Expand the ICMP section in packet details to see which probe triggered it (source IP/port)." },
+        ]},
+      { title:"ICMP type/code quick ref",
+        blocks:[
+          { t:"table", head:["Type","Code","Meaning"], rows:[
+            ["3","3","Dest unreachable — PORT unreachable (closed UDP)"],
+            ["3","0","Dest unreachable — Net unreachable"],
+            ["3","1","Dest unreachable — Host unreachable"],
+            ["8","0","Echo request (ping)"],
+            ["0","0","Echo reply (ping response)"],
+          ]},
+        ]},
+    ]
+  },
+  {
+    id:"smtp-email", title:"Wireshark — SMTP & Email Analysis", src:"Phishing Prevention",
+    cards:[
+      { title:"Bare field matches existence, not value",
+        blocks:[
+          { t:"note", kind:"danger", text:"<code>smtp.response.code</code> alone matches EVERY packet where the field exists (220, 421, 550…all mixed). Use an explicit comparison when asking about one value:" },
+          { t:"cmd", code:"smtp.response.code == 220" },
+        ]},
+      { title:"Find Packet vs display filter",
+        blocks:[
+          { t:"txt", text:"<b>Display filter bar</b> — structured/dissected fields: <code>smtp.response.code == 220</code>, <code>imf contains \"invoice.scr\"</code>." },
+          { t:"txt", text:"<b>Edit → Find Packet</b> (Ctrl+F, String/Regex) — free-text search across raw bytes when you don't know the field name, e.g. finding <code>spamhaus.org</code> inside a rejection message." },
+        ]},
+      { title:"IMF dissection (Internet Message Format)",
+        blocks:[
+          { t:"txt", text:"When SMTP DATA carries a full email, Wireshark nests an <b>IMF</b> sub-layer exposing parsed headers/body/MIME. Filter <code>imf</code> to isolate packets with full email bodies." },
+          { t:"table", head:["Looking for","Where"], rows:[
+            ["Attachment name","IMF → MIME Multipart → Content-Disposition: attachment; filename=…"],
+            ["Sending client/software","X-Mailer header (under IMF)"],
+          ]},
+          { t:"note", kind:"warn", title:".scr gotcha", text:"<code>.scr</code> (Windows screensaver) is a renamed executable — auto-executes like <code>.exe</code> but looks less alarming. Classic malware-delivery disguise." },
+        ]},
+    ]
+  },
+  {
+    id:"email-auth", title:"Email Authentication — SPF / DKIM / DMARC", src:"The Greenholt Phish",
+    cards:[
+      { title:"SPF qualifiers (the -all family)",
+        blocks:[
+          { t:"txt", text:"SPF = DNS TXT record listing authorized sending servers. Qualifier before <code>all</code> sets what happens to anything NOT listed:" },
+          { t:"table", head:["Qualifier","Result"], rows:[
+            ["-all","Fail / hard fail (reject)"],
+            ["~all","SoftFail (flag, don't block)"],
+            ["?all","Neutral (no opinion)"],
+            ["+all","Pass — anyone allowed (never use)"],
+          ]},
+          { t:"note", kind:"info", text:"SPF's qualifier is <b>advisory</b> — the receiving server decides how strictly to honor it. SPF validates the <b>Return-Path</b> (envelope MAIL FROM), NOT the visible <code>From:</code> header." },
+        ]},
+      { title:"DMARC policy + alignment",
+        blocks:[
+          { t:"txt", text:"Separate TXT record at <code>_dmarc.domain.com</code>, on top of SPF+DKIM. Adds alignment (does SPF/DKIM domain match visible From:) and a <code>p=</code> policy:" },
+          { t:"table", head:["p= value","Action on fail"], rows:[
+            ["p=none","Report only (deliver anyway)"],
+            ["p=quarantine","Send to spam folder"],
+            ["p=reject","Bounce, don't deliver"],
+          ]},
+          { t:"note", kind:"warn", text:"SPF's <code>-all</code> and DMARC's <code>p=reject</code> sound identical but live in different records. A domain can have <code>-all</code> with zero DMARC — enforcement then depends entirely on each receiver." },
+        ]},
+      { title:"Terminal lookups",
+        blocks:[
+          { t:"note", kind:"danger", title:"DMARC lives at _dmarc.", text:"SPF is on the apex domain; DMARC is ALWAYS on the <code>_dmarc.</code> subdomain. Querying the apex will never show DMARC." },
+          { t:"cmd", label:"SPF (apex)", code:"dig txt example.com +short" },
+          { t:"cmd", label:"DMARC (_dmarc subdomain)", code:"dig txt _dmarc.example.com +short" },
+          { t:"cmd", label:"resolve SPF+DMARC together, follow includes", code:"checkdmarc example.com   # pip install checkdmarc" },
+        ]},
+    ]
+  },
+  {
+    id:"ioc-defang", title:"IOC Handling — Defanging", src:"Phishing / CTI rooms",
+    cards:[
+      { title:"What & why", span2:true,
+        blocks:[
+          { t:"txt", text:"Converting a live indicator into inert text so it can't be auto-linked, auto-resolved, or accidentally visited. Convention: <code>.</code> → <code>[.]</code>, and <code>http</code> → <code>hxxp</code>." },
+          { t:"cmd", label:"example", code:"103.234.236.83   →   103[.]234[.]236[.]83\nhttp://evil.com  →   hxxp://evil[.]com" },
+          { t:"note", kind:"info", title:"failure modes it prevents", text:"(1) Auto-linking in Slack/Jira/Outlook → teammate clicks out of habit. (2) Link-preview bots / SIEM integrations auto-fetching the URL. (3) Tipping off the attacker when your infra connects to their C2. (4) Keeps the indicator readable/shareable while inert — trivially re-fanged in a sandbox." },
+          { t:"note", kind:"ok", text:"Tool: CyberChef's \"Defang IP Addresses\" / URL recipes. This is a defender convention — attackers want their infra live." },
+        ]},
+    ]
+  },
+  {
+    id:"log-pivot", title:"Incident Investigation — CLI Log Pivoting", src:"Network Security Essentials",
+    cards:[
+      { title:"The one pattern that does everything", desc:"Swap the IOC and field position; the skeleton never changes.", span2:true,
+        blocks:[
+          { t:"cmd", label:"core pivot pattern", code:"grep <IOC> <logfile> | cut -d<delim> -f<field> | sort | uniq -c | sort -nr" },
+          { t:"note", kind:"info", text:"Once this clicks, an unfamiliar log format stops being a blocker — the skill transfers across VPN, SMTP, firewall, and IDS schemas unchanged." },
+        ]},
+      { title:"Kill-chain pivot order",
+        blocks:[
+          { t:"steps", items:[
+            "<b>Recon:</b> count BLOCK sources — <code>grep \"BLOCK\" fw.log | cut -d' ' -f5 | cut -d: -f1 | sort -nr | uniq -c</code>. Top offender = scanning IP.",
+            "<b>Initial access:</b> <code>grep FAIL vpn_auth.log | cut -d' ' -f3 | sort | uniq -c | sort -nr</code> → brute-forced source; grep it back for the <code>assigned_ip=</code> on the first SUCCESS = attacker foothold.",
+            "<b>Lateral movement:</b> grep foothold IP for ALLOW on 22/445/3389; IDS alert text names the technique.",
+            "<b>C2 beaconing:</b> <code>grep \"C2\" ids_alerts.log</code> → src (internal beacon) vs dst (external handler).",
+            "<b>Exfiltration:</b> <code>grep -i exfil ids_alerts.log</code> or <code>grep \"HTTP POST Large\"</code> — src should match the beacon host.",
+          ]},
+        ]},
+    ]
+  },
+  {
+    id:"soc-workflow", title:"SOC Workflow & Reporting", src:"SOC Simulator",
+    cards:[
+      { title:"Five Ws report template",
+        blocks:[
+          { t:"table", head:["W","Capture"], rows:[
+            ["Who","Sender/recipient + spoofing status (SPF/DKIM)"],
+            ["What","Attack vector + payload"],
+            ["When","Delivery / detection time"],
+            ["Where","Mailbox / system affected"],
+            ["Why","Attacker motive / social-engineering angle"],
+          ]},
+          { t:"note", kind:"danger", title:"grading gotcha", text:"Graders check each W is <b>visibly, explicitly</b> labeled in every report — don't let \"obvious\" ones (affected mailbox/asset) collapse into implied text, even when it feels repetitive." },
+        ]},
+      { title:"TP/FP vs escalation — two separate decisions",
+        blocks:[
+          { t:"note", kind:"info", text:"<b>TP/FP judges the artifact, not the outcome.</b> A phishing email with zero evidence of a click is still a True Positive if the email itself is malicious — \"no click found\" is a finding, not grounds for FP." },
+          { t:"note", kind:"warn", text:"<b>Escalation is driven by realized risk.</b> All alerts can be TP but only some escalate — e.g. when the malicious connection was <b>allowed through</b> rather than blocked, creating real exposure." },
+          { t:"txt", text:"<b>Correlate across alerts</b> (shared URL/IP + close timestamps). <b>Reason around missing telemetry</b> — make a risk-based call and document the gap, don't hunt a log source that doesn't exist." },
+        ]},
+    ]
+  },
+  {
+    id:"pyramid", title:"Detection Frameworks — Pyramid of Pain", src:"Cyber Defence Frameworks",
+    cards:[
+      { title:"The pyramid (bottom = cheap for attacker to change)", span2:true,
+        blocks:[
+          { t:"table", head:["Tier","Indicator","Pain to attacker","Blue-team tool"], rows:[
+            ["1 (bottom)","Hash values","Trivial (one bit flip)","Hash blocklist / EDR"],
+            ["2","IP addresses","Easy (rent new VPS)","Firewall rule manager"],
+            ["3","Domain names","Moderate (register/rehost)","DNS rule manager / sinkhole"],
+            ["4","Host artifacts","Annoying (recompile)","Sigma rule (Sysmon)"],
+            ["5","Network artifacts","Annoying (UA/URI/beacon)","Sigma / IDS signature"],
+            ["6 (top)","TTPs","Painful (change behaviour)","Behavioral detection"],
+          ]},
+          { t:"note", kind:"info", title:"behavioral > IOC", text:"Match the <b>shape</b> of a beacon (fixed size + fixed interval), not a specific C2 IP — generalizes past infra changes a static block never catches. Detection rules should map to a MITRE <b>tactic</b> (e.g. TA0011 Command & Control), not just an IOC." },
+          { t:"note", kind:"warn", title:"signal vs noise", text:"Sandbox reports mix in 1–2 benign entries (decoy Microsoft IPs, explorer.exe/notepad.exe noise). Filter by correlating PID/process ownership or behavioral regularity — don't trust every row." },
+        ]},
+    ]
+  },
+  {
+    id:"query-gotchas", title:"Query Language Gotchas — SPL & KQL", src:"Splunk / Elastic rooms",
+    cards:[
+      { title:"Splunk SPL — pipe semantics",
+        blocks:[
+          { t:"note", kind:"warn", text:"The pipe <code>|</code> feeds matched events into a processing command (<code>stats</code>, <code>table</code>, <code>spath</code>) — it is <b>never</b> used to add filter conditions. All filters go in the base search, space-separated for implicit AND." },
+          { t:"cmd", label:"correct", code:"datasource=\"firewall\" URL=\"*domain*\" | stats count" },
+          { t:"cmd", label:"force JSON field extraction if fields don't show", code:"... | spath" },
+        ]},
+      { title:"Elastic KQL — precedence & case",
+        blocks:[
+          { t:"note", kind:"danger", text:"<code>AND</code> binds tighter than <code>OR</code>. <code>Country:\"US\" and User:\"Albert\" or User:\"james\"</code> parses as <code>(US AND Albert) OR james</code>. Always parenthesize mixed AND/OR." },
+          { t:"note", kind:"warn", text:"<code>keyword</code> fields are <b>case-sensitive</b> — a lowercase value silently matches zero docs, quietly collapsing your query. Match field case exactly." },
+        ]},
+    ]
+  },
+];
+
+/* ---- build metadata ---- */
+const BUILD_DATE = "2026-07-16";
+
+/* =========================================================================
+   RENDERER  (no framework — plain DOM)
+   ========================================================================= */
+const ICONS = {"wireshark-filters":"🦈","nmap-detection":"📡","smtp-email":"✉️","email-auth":"🔐",
+  "ioc-defang":"☣️","log-pivot":"🧬","soc-workflow":"🎯","pyramid":"🔺","query-gotchas":"🔎"};
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+// keep <code>/<b> tags in note/txt content but escape stray brackets is risky; content is trusted (authored here).
+function highlight(code){
+  return esc(code)
+    .replace(/(&quot;[^&]*?&quot;|"[^"]*")/g,'<span class="tok-str">$1</span>')
+    .replace(/\b(and|or|not|matches|contains)\b/g,'<span class="tok-op">$1</span>')
+    .replace(/\b(\d+)\b/g,'<span class="tok-num">$1</span>')
+    .replace(/(#[^\n]*)/g,'<span class="tok-cmt">$1</span>');
+}
+
+function renderBlock(b){
+  if(b.t==="cmd"){
+    const label=b.label?`<div class="clabel">${b.label}</div>`:"";
+    return `<div class="cmd">${label}<pre><code>${highlight(b.code)}</code></pre><button class="copy" data-copy="${esc(b.code)}">copy</button></div>`;
+  }
+  if(b.t==="note"){
+    const nt=b.title?`<span class="nt">${b.title}</span>`:"";
+    return `<div class="note ${b.kind||'info'}">${nt}${b.text}</div>`;
+  }
+  if(b.t==="txt") return `<p class="txt">${b.text}</p>`;
+  if(b.t==="table"){
+    const th=b.head.map(h=>`<th>${esc(h)}</th>`).join("");
+    const tr=b.rows.map(r=>`<tr>${r.map((c,i)=>i===0?`<td>${esc(c)}</td>`:`<td>${c}</td>`).join("")}</tr>`).join("");
+    return `<table class="tbl"><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table>`;
+  }
+  if(b.t==="steps") return `<ol class="steps">${b.items.map(i=>`<li>${i}</li>`).join("")}</ol>`;
+  return "";
+}
+
+function renderCard(c){
+  const desc=c.desc?`<p class="desc">${c.desc}</p>`:"";
+  const body=c.blocks.map(renderBlock).join("");
+  const searchText=(c.title+" "+(c.desc||"")+" "+JSON.stringify(c.blocks)).toLowerCase();
+  return `<div class="card${c.span2?' span2':''}" data-search="${esc(searchText)}"><h3>${c.title}</h3>${desc}${body}</div>`;
+}
+
+function render(){
+  const content=document.getElementById("content");
+  const nav=document.getElementById("nav");
+  let entryCount=0;
+  content.innerHTML=cheatsheetData.map(sec=>{
+    entryCount+=sec.cards.length;
+    const cards=sec.cards.map(renderCard).join("");
+    return `<section id="${sec.id}" data-sec="${sec.id}">
+      <div class="sec-head"><h2>${sec.title}</h2><span class="src">${ICONS[sec.id]||'▪'} ${sec.src}</span></div>
+      <div class="cards">${cards}</div>
+    </section>`;
+  }).join("");
+  nav.innerHTML=cheatsheetData.map(sec=>
+    `<a href="#${sec.id}"><span class="ic">${ICONS[sec.id]||'▪'}</span>${sec.title.replace(/^.*?— /,'')}</a>`).join("");
+  document.getElementById("secCount").textContent=cheatsheetData.length;
+  document.getElementById("entryCount").textContent=entryCount;
+  document.getElementById("buildDate").textContent=BUILD_DATE;
+}
+render();
+
+/* ---- copy to clipboard ---- */
+document.addEventListener("click",e=>{
+  const btn=e.target.closest(".copy");
+  if(!btn) return;
+  const text=btn.getAttribute("data-copy").replace(/&amp;/g,"&").replace(/&quot;/g,'"').replace(/&lt;/g,"<").replace(/&gt;/g,">");
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent="✓ copied";btn.classList.add("ok");
+    setTimeout(()=>{btn.textContent="copy";btn.classList.remove("ok");},1200);
+  }).catch(()=>{btn.textContent="⌘C";});
+});
+
+/* ---- live search ---- */
+const search=document.getElementById("search");
+const countEl=document.getElementById("count");
+const noRes=document.getElementById("noResults");
+function doSearch(){
+  const q=search.value.trim().toLowerCase();
+  let shown=0,total=0;
+  document.querySelectorAll("section").forEach(sec=>{
+    let secShown=0;
+    sec.querySelectorAll(".card").forEach(card=>{
+      total++;
+      const match=!q||card.getAttribute("data-search").includes(q);
+      card.style.display=match?"":"none";
+      if(match){shown++;secShown++;}
+    });
+    sec.style.display=secShown?"":"none";
+  });
+  countEl.textContent=q?`${shown}/${total} entries`:`${total} entries`;
+  noRes.style.display=(q&&shown===0)?"block":"none";
+}
+search.addEventListener("input",doSearch);
+doSearch();
+
+/* ---- keyboard: '/' focus, Esc clear ---- */
+document.addEventListener("keydown",e=>{
+  if(e.key==="/"&&document.activeElement!==search){e.preventDefault();search.focus();}
+  if(e.key==="Escape"&&document.activeElement===search){search.value="";doSearch();search.blur();}
+});
+
+/* ---- active nav on scroll ---- */
+const navLinks=[...document.querySelectorAll("#nav a")];
+const secEls=[...document.querySelectorAll("section")];
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(en=>{
+    if(en.isIntersecting){
+      const id=en.target.id;
+      navLinks.forEach(a=>a.classList.toggle("active",a.getAttribute("href")==="#"+id));
+    }
+  });
+},{rootMargin:"-40% 0px -55% 0px"});
+secEls.forEach(s=>io.observe(s));
+
+/* ---- mobile sidebar ---- */
+const sidebar=document.getElementById("sidebar");
+document.getElementById("menuBtn").addEventListener("click",()=>sidebar.classList.toggle("open"));
+document.querySelectorAll("#nav a").forEach(a=>a.addEventListener("click",()=>sidebar.classList.remove("open")));
+</script>
+</body>
+</html>
