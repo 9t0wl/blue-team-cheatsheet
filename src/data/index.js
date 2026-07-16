@@ -3,6 +3,7 @@
 //   2. import it here and add it to the `sections` array (order = page order)
 import wiresharkFilters from "./wireshark-filters.js";
 import nmapDetection from "./nmap-detection.js";
+import arpMitm from "./arp-mitm.js";
 import smtpEmail from "./smtp-email.js";
 import emailAuth from "./email-auth.js";
 import iocDefang from "./ioc-defang.js";
@@ -14,6 +15,7 @@ import queryGotchas from "./query-gotchas.js";
 export const sections = [
   wiresharkFilters,
   nmapDetection,
+  arpMitm,
   smtpEmail,
   emailAuth,
   iocDefang,
