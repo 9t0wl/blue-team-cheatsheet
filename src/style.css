@@ -33,30 +33,42 @@ a{color:var(--cyan);text-decoration:none;}
 a:hover{text-decoration:underline;}
 ::selection{background:rgba(53,201,255,.28);}
 
-/* ---- ambient sharks (decorative background) ---- */
+/* ---- ambient robo-sharks in a pool of data (decorative) ---- */
 .ocean{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+
+/* the data pool: drifting hex/binary motes (populated by main.js) */
+.data-pool{position:absolute;inset:0;}
+.mote{position:absolute;font-family:var(--mono);color:var(--cyan);
+  opacity:0;white-space:nowrap;letter-spacing:1px;
+  animation:mote var(--dur,12s) linear var(--delay,0s) infinite;}
+@keyframes mote{
+  0%   {transform:translateY(24px);opacity:0;}
+  15%  {opacity:var(--peak,.14);}
+  85%  {opacity:calc(var(--peak,.14) * .7);}
+  100% {transform:translateY(-48px);opacity:0;}
+}
+
+/* the sharks */
 .shark{position:absolute;left:0;will-change:transform;color:var(--cyan);
-  filter:drop-shadow(0 0 14px rgba(53,201,255,.35));}
+  filter:drop-shadow(0 0 6px rgba(53,201,255,.55)) drop-shadow(0 0 16px rgba(53,201,255,.30));}
 .shark-svg{display:block;width:100%;height:auto;}
-.shark-svg path{fill:currentColor;}
-.shark-svg .eye{fill:var(--bg);}
 /* three depth layers: size, vertical band, speed, opacity, delay all differ */
-.shark-1{top:16vh;width:230px;opacity:.16;animation:swim 52s linear infinite;}
-.shark-2{top:58vh;width:150px;opacity:.10;animation:swim 74s linear infinite;animation-delay:-24s;}
-.shark-3{top:78vh;width:330px;opacity:.06;animation:swim 104s linear infinite;animation-delay:-60s;}
-.shark-inner{animation:bob 4.5s ease-in-out infinite;}
-.shark-2 .shark-inner{animation-duration:6s;}
-.shark-3 .shark-inner{animation-duration:8s;}
+.shark-1{top:15vh;width:250px;opacity:.55;animation:swim 52s linear infinite;}
+.shark-2{top:55vh;width:165px;opacity:.34;animation:swim 74s linear infinite;animation-delay:-24s;}
+.shark-3{top:80vh;width:350px;opacity:.20;animation:swim 104s linear infinite;animation-delay:-60s;}
+.shark-inner{animation:bob 5s ease-in-out infinite;}
+.shark-2 .shark-inner{animation-duration:6.5s;}
+.shark-3 .shark-inner{animation-duration:8.5s;}
 @keyframes swim{
-  0%   {transform:translateX(-32vw) translateY(0)   scaleX(1);}
-  47%  {transform:translateX(122vw) translateY(5vh) scaleX(1);}
-  50%  {transform:translateX(122vw) translateY(5vh) scaleX(-1);}
-  97%  {transform:translateX(-32vw) translateY(-4vh) scaleX(-1);}
-  100% {transform:translateX(-32vw) translateY(0)   scaleX(1);}
+  0%   {transform:translateX(-34vw) translateY(0)   scaleX(1);}
+  47%  {transform:translateX(124vw) translateY(5vh) scaleX(1);}
+  50%  {transform:translateX(124vw) translateY(5vh) scaleX(-1);}
+  97%  {transform:translateX(-34vw) translateY(-4vh) scaleX(-1);}
+  100% {transform:translateX(-34vw) translateY(0)   scaleX(1);}
 }
 @keyframes bob{
-  0%,100%{transform:translateY(0) rotate(-2deg);}
-  50%    {transform:translateY(7px) rotate(2deg);}
+  0%,100%{transform:translateY(0) rotate(-1.5deg);}
+  50%    {transform:translateY(6px) rotate(1.5deg);}
 }
 @media(prefers-reduced-motion:reduce){.ocean{display:none;}}
 

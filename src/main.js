@@ -28,6 +28,39 @@ function boot() {
   wireKeyboard();
   wireScrollSpy();
   wireMobile();
+  spawnDataPool();
+}
+
+// ---- background "pool of data": drifting hex/binary motes ----
+function spawnDataPool() {
+  const pool = document.getElementById("dataPool");
+  if (!pool) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const HEX = "0123456789ABCDEF";
+  const COUNT = 40;
+  const rand = (min, max) => min + Math.random() * (max - min);
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < COUNT; i++) {
+    const m = document.createElement("span");
+    m.className = "mote";
+    // mix of single bits and short hex bytes for a "data" feel
+    const len = Math.random() < 0.4 ? 1 : Math.random() < 0.7 ? 2 : 3;
+    let txt = "";
+    for (let j = 0; j < len; j++) {
+      txt += Math.random() < 0.5 && len === 1
+        ? (Math.random() < 0.5 ? "0" : "1")
+        : HEX[Math.floor(Math.random() * HEX.length)];
+    }
+    m.textContent = txt;
+    m.style.left = rand(0, 100) + "vw";
+    m.style.top = rand(0, 100) + "vh";
+    m.style.fontSize = rand(9, 19).toFixed(1) + "px";
+    m.style.setProperty("--dur", rand(8, 22).toFixed(1) + "s");
+    m.style.setProperty("--delay", (-rand(0, 22)).toFixed(1) + "s");
+    m.style.setProperty("--peak", rand(0.07, 0.18).toFixed(2));
+    frag.appendChild(m);
+  }
+  pool.appendChild(frag);
 }
 
 // ---- click-to-copy ----
