@@ -4,6 +4,7 @@
 import wiresharkFilters from "./wireshark-filters.js";
 import nmapDetection from "./nmap-detection.js";
 import arpMitm from "./arp-mitm.js";
+import hostId from "./host-id.js";
 import smtpEmail from "./smtp-email.js";
 import emailAuth from "./email-auth.js";
 import iocDefang from "./ioc-defang.js";
@@ -16,6 +17,7 @@ export const sections = [
   wiresharkFilters,
   nmapDetection,
   arpMitm,
+  hostId,
   smtpEmail,
   emailAuth,
   iocDefang,
