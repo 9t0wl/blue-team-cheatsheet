@@ -36,6 +36,8 @@ export default {
         { t: "cmd", label: "password submitted", code: "ftp.request.command == \"PASS\"" },
         { t: "cmd", label: "hunt a specific password value", code: "ftp.request.arg == \"password\"" },
         { t: "note", kind: "danger", text: "Because FTP auth is fully cleartext, a passive sniffer sees every <code>USER</code>/<code>PASS</code> pair directly — no MITM required, unlike the HTTP form-credential case." },
+        { t: "note", kind: "ok", title: "Tools → Credentials WORKS here (unlike HTML forms)", text: "FTP is one of the protocols Wireshark's built-in <code>Tools → Credentials</code> harvester natively supports (alongside HTTP Basic Auth, IMAP, POP, SMTP) — it'll auto-list every <code>USER</code>/<code>PASS</code> pair with packet numbers, no manual filtering needed. Contrast with the ARP/MITM section, where the same tool came up completely <b>empty</b> against an HTML form login — that protocol isn't one of its supported types. Always check what the tool actually covers before trusting an empty result as \"no creds here.\"" },
+        { t: "note", kind: "warn", title: "empty password submitted", text: "A <code>PASS</code> command with no argument (blank right after <code>PASS</code>) followed by <code>530 Login incorrect</code> is a literal empty-password attempt — visible directly in a <b>Follow TCP Stream</b> view of that session." },
       ],
     },
     {
