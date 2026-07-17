@@ -59,5 +59,16 @@ export default {
         { t: "note", kind: "info", text: "Before decryption, all of this is invisible — the frame just reads <code>Application Data</code>. After decryption, the exact same bytes resolve into a full HTTP/2 stream: which resource was requested, what came back, and the connection's live flow-control state." },
       ],
     },
+    {
+      title: "Export Objects — the fast path to files",
+      desc: "Skip manual stream-chasing once decryption is applied.",
+      span2: true,
+      blocks: [
+        { t: "cmd", label: "menu path", code: "File → Export Objects → HTTP" },
+        { t: "note", kind: "ok", title: "why this beats manual stream-following", text: "Once the key log file is applied, Wireshark can scan the <b>entire capture</b> — every host, every TCP stream, every HTTP/2 stream — and list every file object actually transferred: hostname, content-type, size, filename. Select one → <b>Save</b> (or Save All) writes it straight to disk." },
+        { t: "note", kind: "info", title: "when to use which", text: "<b>Follow → HTTP/2 Stream</b> is for <i>understanding</i> one specific exchange (why a redirect happened, what a header looked like). <b>Export Objects</b> is for <i>getting the files</i> — it does the same reassembly automatically, across the whole capture, without you tracing redirects or hunting the right stream number by hand." },
+        { t: "note", kind: "warn", title: "worked example — the flag", text: "A <code>GET /f6l4ta5w6gidsga3/flag.txt</code> 302-redirected to a presigned S3 URL on a completely different host (<code>situla.bitbit.net</code>). Rather than tracing that redirect, finding the new host's IP, and filtering to its stream, <code>Export Objects → HTTP</code> listed the <code>text/plain</code> object directly — save it and read the flag." },
+      ],
+    },
   ],
 };
