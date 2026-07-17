@@ -9,6 +9,8 @@ import tunnelling from "./tunnelling.js";
 import ftpAnalysis from "./ftp-analysis.js";
 import httpAnalysis from "./http-analysis.js";
 import httpsDecrypt from "./https-decrypt.js";
+import cleartextCreds from "./cleartext-creds.js";
+import firewallAcl from "./firewall-acl.js";
 import smtpEmail from "./smtp-email.js";
 import emailAuth from "./email-auth.js";
 import iocDefang from "./ioc-defang.js";
@@ -26,6 +28,8 @@ export const sections = [
   ftpAnalysis,
   httpAnalysis,
   httpsDecrypt,
+  cleartextCreds,
+  firewallAcl,
   smtpEmail,
   emailAuth,
   iocDefang,
