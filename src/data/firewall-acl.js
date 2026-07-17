@@ -44,6 +44,8 @@ export default {
         { t: "cmd", label: "deny a source IPv4 address", code: "add deny ip from <source-ip> to any in" },
         { t: "cmd", label: "allow a destination MAC address", code: "add allow MAC <destination-mac> any in" },
         { t: "note", kind: "ok", title: "reading the grammar", text: "ipfw's shape is <code>add {allow|deny} &lt;proto&gt; from &lt;src&gt; to &lt;dst&gt; [in|out]</code> for IP-layer rules, and <code>add {allow|deny} MAC &lt;dst-mac&gt; &lt;src-mac&gt; [in|out]</code> for layer-2 rules — matching one side to <code>any</code> leaves the other unrestricted, which is how a single-sided (source-only or destination-only) rule gets expressed." },
+        { t: "cmd", label: "confirmed — packet 99, deny source IPv4", code: "add deny ip from 10.121.70.151 to any in" },
+        { t: "cmd", label: "confirmed — packet 231, allow destination MAC", code: "add allow MAC 00:d0:59:aa:af:80 any in" },
       ],
     },
   ],
