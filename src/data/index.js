@@ -8,6 +8,7 @@ import hostId from "./host-id.js";
 import tunnelling from "./tunnelling.js";
 import ftpAnalysis from "./ftp-analysis.js";
 import httpAnalysis from "./http-analysis.js";
+import httpsDecrypt from "./https-decrypt.js";
 import smtpEmail from "./smtp-email.js";
 import emailAuth from "./email-auth.js";
 import iocDefang from "./ioc-defang.js";
@@ -24,6 +25,7 @@ export const sections = [
   tunnelling,
   ftpAnalysis,
   httpAnalysis,
+  httpsDecrypt,
   smtpEmail,
   emailAuth,
   iocDefang,
