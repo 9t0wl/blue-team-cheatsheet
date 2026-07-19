@@ -8,6 +8,7 @@ import hostId from "./host-id.js";
 import tunnelling from "./tunnelling.js";
 import ftpAnalysis from "./ftp-analysis.js";
 import httpAnalysis from "./http-analysis.js";
+import exfilQuickref from "./exfil-quickref.js";
 import httpsDecrypt from "./https-decrypt.js";
 import cleartextCreds from "./cleartext-creds.js";
 import firewallAcl from "./firewall-acl.js";
@@ -27,6 +28,7 @@ export const sections = [
   tunnelling,
   ftpAnalysis,
   httpAnalysis,
+  exfilQuickref,
   httpsDecrypt,
   cleartextCreds,
   firewallAcl,
