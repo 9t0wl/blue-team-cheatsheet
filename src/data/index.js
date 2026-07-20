@@ -8,6 +8,7 @@ import dnsSslMitm from "./dns-ssl-mitm.js";
 import snortIds from "./snort-ids.js";
 import webSecurityEssentials from "./web-security-essentials.js";
 import detectingWebAttacks from "./detecting-web-attacks.js";
+import detectingWebShells from "./detecting-web-shells.js";
 import hostId from "./host-id.js";
 import tunnelling from "./tunnelling.js";
 import ftpAnalysis from "./ftp-analysis.js";
@@ -32,6 +33,7 @@ export const sections = [
   snortIds,
   webSecurityEssentials,
   detectingWebAttacks,
+  detectingWebShells,
   hostId,
   tunnelling,
   ftpAnalysis,
