@@ -5,6 +5,12 @@ export default {
   icon: "🛡️",
   cards: [
     {
+      title: "What is Snort",
+      blocks: [
+        { t: "txt", text: "Open-source, rule-based Network Intrusion Detection/Prevention System (NIDS/NIPS), originally written by <b>Martin Roesch</b>, now maintained by open-source contributors and <b>Cisco Talos</b>. Three primary use cases: <b>packet sniffing</b>, <b>packet logging</b>, and full <b>NIDS/NIPS</b> operation — the four operating modes below map directly onto these." },
+      ],
+    },
+    {
       title: "IDS vs IPS — passive vs active",
       blocks: [
         { t: "txt", text: "Same underlying job (spot malicious traffic), different response posture. <b>IDS</b> = detect + alert only, never touches the packet. <b>IPS</b> = detect + automatically block/terminate. Snort is <b>one engine</b> that can run as either — the difference is which mode/flags you launch it with, not a different product." },
@@ -83,6 +89,7 @@ export default {
           ["-D", "daemon/background mode"],
           ["-A", "alert mode: console / cmg / fast / full / none"],
           ["-Q", "inline IPS mode"],
+          ["-q", "quiet mode — suppress the startup banner"],
         ]},
         { t: "cmd", label: "test config before deploying", code: "sudo snort -c /etc/snort/snort.conf -T" },
         { t: "cmd", label: "sniffer mode, verbose + payload dump", code: "sudo snort -dev -i eth0" },
@@ -94,6 +101,19 @@ export default {
       ],
     },
     {
+      title: "snort.conf anatomy",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "The main config at <code>/etc/snort/snort.conf</code> controls everything: network variables, decoder settings, DAQ (Data Acquisition) modules, output plugins, and which rule sets are loaded. Only <b>one config file can be active at runtime</b>, but you can maintain multiple configs for different purposes (e.g. a separate IPS-mode config vs. a passive-IDS config) and pick which one loads via <code>-c</code>." },
+        { t: "table", head: ["Step", "Purpose"], rows: [
+          ["Step 1", "Set network variables (HOME_NET, EXTERNAL_NET, etc.)"],
+          ["Step 2", "Configure the decoder/DAQ mode (default: PCAP; IPS: af_packet)"],
+          ["Step 6", "Configure output plugins (logging and alerting formats)"],
+          ["Step 7", "Customize your rule set (uncomment rules to activate them)"],
+        ]},
+      ],
+    },
+    {
       title: "Config & rule management",
       blocks: [
         { t: "table", head: ["File", "Path"], rows: [
@@ -101,9 +121,20 @@ export default {
           ["Local rules", "/etc/snort/rules/local.rules"],
           ["Default log dir", "/var/log/snort/"],
         ]},
+        { t: "cmd", label: "edit local rules / main config", code: "sudo gedit /etc/snort/rules/local.rules\nsudo gedit /etc/snort/snort.conf" },
         { t: "note", kind: "info", title: "why comment out, never delete", text: "Deleting a rule silently makes it impossible to reconstruct <i>why</i> a detection gap exists later, during an incident postmortem. Commenting preserves the rule's rationale/history for the next analyst — same instinct as not force-pushing over git history." },
         { t: "note", kind: "warn", title: "always bump rev", text: "Any time a rule is modified, increment its <code>rev</code> number. <code>sid</code> stays constant (it's the rule's identity); <code>rev</code> tracks its version." },
         { t: "note", kind: "danger", title: "-T before every deploy", text: "Snort's equivalent of <code>terraform plan</code> / <code>nginx -t</code> — validates syntax without loading the ruleset live, catching a malformed rule before it either crashes the running IDS or silently fails to load and leaves you blind to whatever that rule was supposed to catch." },
+      ],
+    },
+    {
+      title: "Utility / process & file management",
+      blocks: [
+        { t: "cmd", label: "list files in current dir (packet-logger output)", code: "ls .\nsudo ls ./<folder>" },
+        { t: "cmd", label: "check running Snort process", code: "ps aux | grep snort" },
+        { t: "cmd", label: "kill the Snort daemon", code: "sudo kill -9 <PID>" },
+        { t: "cmd", label: "fix file ownership (logs are root-owned — Snort runs via sudo)", code: "sudo chown <username> <file>\nsudo chown -R <username> <directory>" },
+        { t: "note", kind: "warn", title: "why chown matters here", text: "Packet-logger mode requires <code>sudo</code>, so every log file it writes is <b>owned by root</b>. If you need to open/move/analyze those logs as your normal user afterward, you'll hit permission errors until you <code>chown</code> them back." },
       ],
     },
   ],
