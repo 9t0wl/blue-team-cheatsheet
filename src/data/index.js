@@ -5,6 +5,7 @@ import wiresharkFilters from "./wireshark-filters.js";
 import nmapDetection from "./nmap-detection.js";
 import arpMitm from "./arp-mitm.js";
 import dnsSslMitm from "./dns-ssl-mitm.js";
+import snortIds from "./snort-ids.js";
 import hostId from "./host-id.js";
 import tunnelling from "./tunnelling.js";
 import ftpAnalysis from "./ftp-analysis.js";
@@ -26,6 +27,7 @@ export const sections = [
   nmapDetection,
   arpMitm,
   dnsSslMitm,
+  snortIds,
   hostId,
   tunnelling,
   ftpAnalysis,
