@@ -6,6 +6,7 @@ import nmapDetection from "./nmap-detection.js";
 import arpMitm from "./arp-mitm.js";
 import dnsSslMitm from "./dns-ssl-mitm.js";
 import snortIds from "./snort-ids.js";
+import webSecurityEssentials from "./web-security-essentials.js";
 import hostId from "./host-id.js";
 import tunnelling from "./tunnelling.js";
 import ftpAnalysis from "./ftp-analysis.js";
@@ -28,6 +29,7 @@ export const sections = [
   arpMitm,
   dnsSslMitm,
   snortIds,
+  webSecurityEssentials,
   hostId,
   tunnelling,
   ftpAnalysis,
