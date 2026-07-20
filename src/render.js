@@ -50,10 +50,12 @@ function renderBlock(b) {
   }
 }
 
-function renderCard(c) {
+function renderCard(c, sectionMeta) {
   const desc = c.desc ? `<p class="desc">${c.desc}</p>` : "";
   const body = c.blocks.map(renderBlock).join("");
   const searchText = (
+    sectionMeta +
+    " " +
     c.title +
     " " +
     (c.desc || "") +
@@ -64,7 +66,8 @@ function renderCard(c) {
 }
 
 export function renderSection(sec) {
-  const cards = sec.cards.map(renderCard).join("");
+  const sectionMeta = `${sec.title} ${sec.src}`;
+  const cards = sec.cards.map((c) => renderCard(c, sectionMeta)).join("");
   return `<section id="${sec.id}" data-sec="${sec.id}">
     <div class="sec-head"><h2>${sec.title}</h2><span class="src">${sec.icon || "▪"} ${sec.src}</span></div>
     <div class="cards">${cards}</div>
