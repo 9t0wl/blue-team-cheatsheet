@@ -9,7 +9,7 @@ export default {
       span2: true,
       blocks: [
         { t: "txt", text: "Windows telemetry for a SOC comes from two layers that don't overlap: the built-in <b>Security Log</b> (always present, no install needed) and <b>Sysmon</b> (Sysinternals add-on, has to be deployed/configured, far more granular). Treat them as complementary, not redundant." },
-        { t: "note", kind: "warn", title: "living reference", text: "Full standard Event ID list below, filled in as a reference now. Rooms actually completed so far confirm the <b>log source split</b> and <b>Sysmon Event ID 1</b> specifically; the rest will get THM-specific annotations (example log lines, what the room flagged as suspicious, etc.) as <b>Windows Threat Detection 1–3</b> are completed." },
+        { t: "note", kind: "warn", title: "living reference", text: "This card stays the numeric ID lookup table. Room-specific detection walkthroughs (attack chains, filters, worked examples) now live in dedicated sections — see <b>Windows Initial Access Detection</b> (Windows Threat Detection 1) and <b>Discovery, Collection & Ingress Tool Transfer</b> (Windows Threat Detection 2). Windows Threat Detection 3 will get its own section too once complete." },
       ],
     },
     {
