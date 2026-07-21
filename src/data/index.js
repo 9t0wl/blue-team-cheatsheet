@@ -25,6 +25,7 @@ import logPivot from "./log-pivot.js";
 import socWorkflow from "./soc-workflow.js";
 import pyramid from "./pyramid.js";
 import queryGotchas from "./query-gotchas.js";
+import windowsEventIds from "./windows-event-ids.js";
 
 export const sections = [
   wiresharkFilters,
@@ -51,6 +52,7 @@ export const sections = [
   socWorkflow,
   pyramid,
   queryGotchas,
+  windowsEventIds,
 ];
 
 export { config } from "./config.js";
