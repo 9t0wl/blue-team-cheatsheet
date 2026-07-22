@@ -28,6 +28,9 @@ import queryGotchas from "./query-gotchas.js";
 import windowsEventIds from "./windows-event-ids.js";
 import windowsInitialAccess from "./windows-initial-access.js";
 import windowsPostAccess from "./windows-post-access.js";
+import windowsPersistenceC2 from "./windows-persistence-c2.js";
+import linuxLogging from "./linux-logging.js";
+import linuxInitialAccess from "./linux-initial-access.js";
 
 export const sections = [
   wiresharkFilters,
@@ -57,6 +60,9 @@ export const sections = [
   windowsEventIds,
   windowsInitialAccess,
   windowsPostAccess,
+  windowsPersistenceC2,
+  linuxLogging,
+  linuxInitialAccess,
 ];
 
 export { config } from "./config.js";

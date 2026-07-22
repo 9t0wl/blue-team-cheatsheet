@@ -9,7 +9,7 @@ export default {
       span2: true,
       blocks: [
         { t: "txt", text: "Windows telemetry for a SOC comes from two layers that don't overlap: the built-in <b>Security Log</b> (always present, no install needed) and <b>Sysmon</b> (Sysinternals add-on, has to be deployed/configured, far more granular). Treat them as complementary, not redundant." },
-        { t: "note", kind: "warn", title: "living reference", text: "This card stays the numeric ID lookup table. Room-specific detection walkthroughs (attack chains, filters, worked examples) now live in dedicated sections — see <b>Windows Initial Access Detection</b> (Windows Threat Detection 1) and <b>Discovery, Collection & Ingress Tool Transfer</b> (Windows Threat Detection 2). Windows Threat Detection 3 will get its own section too once complete." },
+        { t: "note", kind: "warn", title: "living reference", text: "This card stays the numeric ID lookup table. Room-specific detection walkthroughs (attack chains, filters, worked examples) now live in dedicated sections — see <b>Windows Initial Access Detection</b> (Windows Threat Detection 1), <b>Discovery, Collection & Ingress Tool Transfer</b> (Windows Threat Detection 2), and <b>C2, Persistence & Impact</b> (Windows Threat Detection 3)." },
       ],
     },
     {
@@ -45,6 +45,17 @@ export default {
           ["4728", "Member added to a security-enabled global group"],
           ["4732", "Member added to a security-enabled local group"],
           ["4756", "Member added to a security-enabled universal group"],
+        ]},
+      ],
+    },
+    {
+      title: "Event ID Reference — Services & Scheduled Tasks (persistence)",
+      span2: true,
+      blocks: [
+        { t: "table", head: ["ID", "Description"], rows: [
+          ["4697", "A service was installed on the system"],
+          ["7045", "System log equivalent of a new service being installed (System log, not Security)"],
+          ["4698", "A scheduled task was created"],
         ]},
       ],
     },
