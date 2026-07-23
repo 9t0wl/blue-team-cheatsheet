@@ -31,6 +31,7 @@ import windowsPostAccess from "./windows-post-access.js";
 import windowsPersistenceC2 from "./windows-persistence-c2.js";
 import linuxLogging from "./linux-logging.js";
 import linuxInitialAccess from "./linux-initial-access.js";
+import linuxDiscovery from "./linux-discovery.js";
 
 export const sections = [
   wiresharkFilters,
@@ -63,6 +64,7 @@ export const sections = [
   windowsPersistenceC2,
   linuxLogging,
   linuxInitialAccess,
+  linuxDiscovery,
 ];
 
 export { config } from "./config.js";
