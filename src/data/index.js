@@ -32,6 +32,7 @@ import windowsPersistenceC2 from "./windows-persistence-c2.js";
 import linuxLogging from "./linux-logging.js";
 import linuxInitialAccess from "./linux-initial-access.js";
 import linuxDiscovery from "./linux-discovery.js";
+import linuxPersistence from "./linux-persistence.js";
 
 export const sections = [
   wiresharkFilters,
@@ -65,6 +66,7 @@ export const sections = [
   linuxLogging,
   linuxInitialAccess,
   linuxDiscovery,
+  linuxPersistence,
 ];
 
 export { config } from "./config.js";
