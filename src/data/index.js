@@ -34,6 +34,7 @@ import linuxInitialAccess from "./linux-initial-access.js";
 import linuxDiscovery from "./linux-discovery.js";
 import linuxPersistence from "./linux-persistence.js";
 import malwareClassification from "./malware-classification.js";
+import malwareAnalysisIntro from "./malware-analysis-intro.js";
 
 export const sections = [
   wiresharkFilters,
@@ -69,6 +70,7 @@ export const sections = [
   linuxDiscovery,
   linuxPersistence,
   malwareClassification,
+  malwareAnalysisIntro,
 ];
 
 export { config } from "./config.js";
