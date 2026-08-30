@@ -37,6 +37,7 @@ import malwareClassification from "./malware-classification.js";
 import malwareAnalysisIntro from "./malware-analysis-intro.js";
 import fileHashThreatIntel from "./file-hash-threat-intel.js";
 import ipDomainThreatIntel from "./ip-domain-threat-intel.js";
+import logAnalysisSiem from "./log-analysis-siem.js";
 
 export const sections = [
   wiresharkFilters,
@@ -75,6 +76,7 @@ export const sections = [
   malwareAnalysisIntro,
   fileHashThreatIntel,
   ipDomainThreatIntel,
+  logAnalysisSiem,
 ];
 
 export { config } from "./config.js";
