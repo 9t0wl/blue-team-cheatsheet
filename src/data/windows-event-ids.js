@@ -95,6 +95,7 @@ export default {
           ["Coverage gap", "only populated for interactive console sessions — a scheduled task running a .ps1 directly leaves nothing here"],
         ]},
         { t: "note", kind: "warn", title: "not a substitute for real logging", text: "An attacker who knows about this file can delete it. Treat it as one useful artifact among several during an investigation, not a substitute for <b>PowerShell Script Block Logging (Event ID 4104)</b> or <b>Module Logging</b> — the actual enterprise-grade fix for this blind spot." },
+        { t: "note", kind: "info", title: "seen working end to end — Alert Triage With Elastic", text: "Confirmed hands-on: <code>event.module:powershell and event.code:4104</code> with field <code>powershell.file.script_block_text</code> captured an attacker's <code>whoami</code>/<code>whoami /priv</code> discovery commands in full plaintext — exactly the gap Sysmon Event ID 1 alone leaves open. Full worked query in the Elastic Alert Triage Playbook section." },
       ],
     },
   ],

@@ -40,6 +40,8 @@ import ipDomainThreatIntel from "./ip-domain-threat-intel.js";
 import splunkSplReference from "./splunk-spl-reference.js";
 import logAnalysisSiem from "./log-analysis-siem.js";
 import alertTriagePlaybook from "./alert-triage-playbook.js";
+import kibanaKqlReference from "./kibana-kql-reference.js";
+import elasticAlertTriagePlaybook from "./elastic-alert-triage-playbook.js";
 
 export const sections = [
   wiresharkFilters,
@@ -81,6 +83,8 @@ export const sections = [
   splunkSplReference,
   logAnalysisSiem,
   alertTriagePlaybook,
+  kibanaKqlReference,
+  elasticAlertTriagePlaybook,
 ];
 
 export { config } from "./config.js";
