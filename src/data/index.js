@@ -39,6 +39,7 @@ import fileHashThreatIntel from "./file-hash-threat-intel.js";
 import ipDomainThreatIntel from "./ip-domain-threat-intel.js";
 import splunkSplReference from "./splunk-spl-reference.js";
 import logAnalysisSiem from "./log-analysis-siem.js";
+import alertTriagePlaybook from "./alert-triage-playbook.js";
 
 export const sections = [
   wiresharkFilters,
@@ -79,6 +80,7 @@ export const sections = [
   ipDomainThreatIntel,
   splunkSplReference,
   logAnalysisSiem,
+  alertTriagePlaybook,
 ];
 
 export { config } from "./config.js";
