@@ -72,6 +72,7 @@ export default {
         ]},
         { t: "cmd", label: "known offensive tool signatures", code: "(http.user_agent contains \"sqlmap\") or (http.user_agent contains \"Nmap\") or\n(http.user_agent contains \"Wfuzz\") or (http.user_agent contains \"Nikto\")" },
         { t: "note", kind: "info", text: "Unsure if a UA string is legitimate? Web-search the exact string against known default UAs before calling it anomalous — validate, don't guess." },
+        { t: "note", kind: "warn", title: "custom-compiled C2 leaks its language runtime the same way", text: "A bespoke implant has no filename/hash reputation yet, but its HTTP client often self-identifies anyway — <code>Nim httpclient/1.6.6</code> named a Tempest C2 binary as Nim-compiled (a language favored for malware precisely because AV/EDR signature coverage against it is weaker), and <code>bitsadmin</code> in a UA named the built-in BITS client being used as a LOLBin downloader (T1197). See Privilege Escalation & Lateral Movement." },
       ],
     },
     {

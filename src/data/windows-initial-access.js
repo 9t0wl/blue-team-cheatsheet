@@ -55,6 +55,16 @@ export default {
       ],
     },
     {
+      title: "Phishing — Office document exploits (Follina, CVE-2022-30190)",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "A Word doc's <code>word/_rels/document.xml.rels</code> can legitimately reference a remote template. Follina abuses this to fetch a remote HTML file instead, which calls the <code>ms-msdt:</code> URI protocol handler directly — code execution runs through the OS URI-handler mechanism, not a macro, so it sails past Protected View warnings and VBA/macro-based AV scanning entirely." },
+        { t: "cmd", label: "the command-line tell — WINWORD.EXE spawning msdt.exe", code: "msdt.exe ms-msdt:/id PCWDiagnostic /skip force /param \"IT_BrowseForFile=$(Invoke-Expression($(Invoke-Expression('[System.Text.Encoding]'+[char]58+[char]58+'UTF8.GetString([System.Convert]'+[char]58+[char]58+'FromBase64String(''<b64>'')')))..." },
+        { t: "note", kind: "danger", title: "recognize it without knowing the CVE by sight", text: "Legitimate <code>ms-msdt:</code> calls launch an actual diagnostic wizard — one carrying an <code>IT_BrowseForFile=</code> value that resolves to <code>Invoke-Expression</code> wrapping base64 is never legitimate. The real detection move: walk the Sysmon parent-child chain off <code>WinWord.exe</code> (Event ID 1, ParentProcessId→ProcessId) — <code>WINWORD.EXE → msdt.exe</code> is anomalous on its own, Word has no business launching the support diagnostic tool." },
+        { t: "note", kind: "info", title: "typical payload behavior once decoded", text: "Pull <code>ApplicationData</code> path → cd into <code>\\Microsoft\\Windows\\Start Menu\\Programs\\Startup</code> → download a zip from attacker infra → <code>Expand-Archive</code> it directly into Startup → delete the zip. Textbook Startup-folder persistence (see C2/Persistence card) delivered by a single one-liner." },
+      ],
+    },
+    {
       title: "USB — same execution pattern as phishing, different origin",
       span2: true,
       blocks: [
