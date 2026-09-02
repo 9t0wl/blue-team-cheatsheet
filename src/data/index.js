@@ -44,6 +44,7 @@ import kibanaKqlReference from "./kibana-kql-reference.js";
 import elasticAlertTriagePlaybook from "./elastic-alert-triage-playbook.js";
 import windowsPrivescLateralMovement from "./windows-privesc-lateral-movement.js";
 import exfilReconstruction from "./exfil-reconstruction.js";
+import memoryForensics from "./memory-forensics.js";
 
 export const sections = [
   wiresharkFilters,
@@ -89,6 +90,7 @@ export const sections = [
   elasticAlertTriagePlaybook,
   windowsPrivescLateralMovement,
   exfilReconstruction,
+  memoryForensics,
 ];
 
 export { config } from "./config.js";
