@@ -9,7 +9,7 @@ export default {
       span2: true,
       blocks: [
         { t: "txt", text: "The <b>Tunnelling</b> and <b>Data Exfiltration</b> sections above answer <i>\"is data leaving?\"</i>. This section answers the next question the IR lead actually asks: <b>\"what exactly left, and can you show me the contents?\"</b> Same PCAP, different job — you're rebuilding the original file byte-for-byte out of the carrier protocol." },
-        { t: "steps", steps: [
+        { t: "steps", items: [
           "Identify the carrier (DNS query names, HTTP POST bodies, ICMP payloads) and the C2 IP.",
           "Isolate <b>only</b> the packets carrying payload — this filtering step is where reconstruction usually fails.",
           "Strip the carrier framing so you're left with a single unbroken encoded string.",
@@ -84,7 +84,7 @@ export default {
     {
       title: "Wireshark route (when you'd rather click)",
       blocks: [
-        { t: "steps", steps: [
+        { t: "steps", items: [
           "Filter on a known artifact name — e.g. <code>frame contains \"sq3.exe\"</code>.",
           "Right-click the hit → <b>Follow → HTTP Stream</b> to read the tasking.",
           "Bump the <b>Stream</b> spinner by one to land on the matching output POST.",
@@ -149,7 +149,7 @@ export default {
       title: "Worked example — the Boogeyman 1 chain end to end",
       span2: true,
       blocks: [
-        { t: "steps", steps: [
+        { t: "steps", items: [
           "<b>Delivery</b> — phishing mail from a lookalike domain, password-protected ZIP, password in the body.",
           "<b>Execution</b> — LNK runs <code>powershell -enc</code>; decoded (UTF-16LE) it's an <code>IEX (New-Object Net.WebClient).DownloadString()</code> stager.",
           "<b>C2</b> — beacon polls the staging host on :8080, <code>GET</code> for tasking / <code>POST</code> for output.",

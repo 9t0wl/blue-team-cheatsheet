@@ -136,7 +136,7 @@ export default {
       title: "Worked example — reconstructing an intrusion from RAM alone",
       span2: true,
       blocks: [
-        { t: "steps", steps: [
+        { t: "steps", items: [
           "<b>pstree</b> → <code>OUTLOOK.EXE → WINWORD.EXE → wscript.exe → updater.exe</code>. The Office-parents-a-script-host edge is the whole finding; note the PIDs and the tight CreateTime cluster.",
           "<b>olevba</b> on the attachment → macro downloads a fake <code>.png</code> and writes it as <code>C:\\ProgramData\\update.js</code>, executed by <code>wscript.exe</code>.",
           "<b>strings / cmdline</b> → the JS pulls a second binary and drops it in <code>C:\\Windows\\Tasks\\</code> — a directory that looks system-ish but is user-writable.",
@@ -156,7 +156,7 @@ export default {
       span2: true,
       blocks: [
         { t: "txt", text: "A challenge room ends when the questions are answered. A real incident doesn't — every IOC recovered above is a search term for finding <b>the victims you don't know about yet</b>. This is the step that separates an analyst from someone who can run Volatility." },
-        { t: "steps", steps: [
+        { t: "steps", items: [
           "<b>Pivot every IOC into the SIEM/mail gateway</b> — sender address, subject line, attachment filename, file hash, stage-2 URL, C2 IP. Spear-phishing is rarely sent to one person.",
           "<b>Identify every recipient</b>, then split them: delivered-and-opened, delivered-not-opened, blocked. Each group gets different handling.",
           "<b>Purge/retract the message</b> from mailboxes that still hold it — this is time-critical and the highest-value action available, because it prevents compromises rather than investigating them.",
