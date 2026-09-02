@@ -29,8 +29,10 @@ export default {
           ["What's in the registry?", "<code>windows.registry.printkey --key '&lt;path&gt;'</code>"],
           ["Any injected/unbacked code?", "<code>windows.malfind</code>"],
           ["What DLLs did it load?", "<code>windows.dlllist --pid &lt;pid&gt;</code>"],
+          ["Dump one process's memory", "<code>windows.memmap --dump --pid &lt;pid&gt;</code>"],
           ["Hashes / credential material?", "<code>windows.hashdump</code>, <code>windows.lsadump</code>"],
         ]},
+        { t: "note", kind: "ok", title: "two ways to get a process's own image path", text: "<code>windows.cmdline --pid &lt;pid&gt;</code> is the direct route. <code>windows.dlllist --pid &lt;pid&gt;</code> also works and is a useful fallback — <b>the first entry in a process's module list is its own executable</b>, so the top row gives you the full path even when cmdline is truncated or empty." },
         { t: "note", kind: "ok", title: "a workable triage order", text: "<code>pstree</code> to find the anomaly → <code>cmdline</code> on that PID for the full invocation → <code>netscan</code> filtered to that PID for the C2 → <code>filescan</code> for the artifacts it touched → <code>dumpfiles</code> to recover them. Each step hands you the pivot value for the next." },
       ],
     },
@@ -54,6 +56,24 @@ export default {
         { t: "note", kind: "ok", title: "CLOSED rows are the point", text: "<code>netscan</code> pool-scans for connection structures still resident in memory rather than reading a live table, so it recovers sockets that <b>already tore down</b>. A beacon that finished its callback minutes before capture still appears with state <code>CLOSED</code> — a live <code>netstat</code> at that moment would have shown nothing. This is the single strongest argument for grabbing RAM before doing anything else on a suspect host." },
         { t: "note", kind: "info", title: "read it as a beacon, not a connection", text: "Many short <code>CLOSED</code> rows from one PID to one IP:port, spaced a minute or two apart, is a polling C2 — not a failed connection. Compare the timestamps: even spacing is the tell." },
         { t: "note", kind: "warn", title: "keep a benign row for contrast", text: "Note what normal looks like in the same output (e.g. <code>OUTLOOK.EXE</code> → an Azure IP on 443). Reports land better when the malicious row is shown next to the legitimate one." },
+      ],
+    },
+
+    {
+      title: "Output handling — make the results readable",
+      blocks: [
+        { t: "cmd", label: "redirect once, grep many times", code: "vol -f mem.raw windows.pstree   > pstree.txt\nvol -f mem.raw windows.netscan  > netscan.txt\nvol -f mem.raw windows.dlllist --pid <pid> > dlllist.txt\nolevba document.doc > macros.txt" },
+        { t: "note", kind: "info", title: "wrapped columns are a terminal-width problem, not a tool problem", text: "Volatility's wide tables shear into unreadable offset columns in a small window. <b>Maximise the terminal before running</b>, or redirect to a file and open it in an editor — the columns realign. Losing the PID/PPID alignment is how you misread a process tree." },
+        { t: "cmd", label: "page long output instead of scrollback-hunting", code: "vol -f mem.raw windows.netscan | less     # / to search, q to quit\nvol -f mem.raw windows.netscan | more" },
+        { t: "note", kind: "ok", title: "keep a working notes file", text: "Paste each confirmed artifact (PID, path, URL, hash) into a scratch file as you go. Every answer in a memory investigation is the pivot value for the next query, and re-running a five-minute plugin because you lost a PID in scrollback is the most avoidable time sink there is." },
+      ],
+    },
+
+    {
+      title: "Dumping a single process's memory",
+      blocks: [
+        { t: "cmd", label: "dump, then string it", code: "vol -f mem.raw windows.memmap --dump --pid <pid>\nstrings pid.<pid>.dmp    | grep -i '<keyword>'\nstrings -el pid.<pid>.dmp | grep -i '<keyword>'" },
+        { t: "note", kind: "warn", title: "a process dump can hold less than the full image", text: "Narrowing to one PID cuts noise, but the artifact you want may live in another process's memory, in pool memory, or in a since-exited process — a command line built by PowerShell and passed to <code>schtasks.exe</code> exists in <b>both</b> processes. If a targeted dump comes back thin, <b>fall back to strings across the whole image</b> rather than concluding the artifact isn't there." },
       ],
     },
 
@@ -94,6 +114,7 @@ export default {
       title: "Macro-document delivery — olevba",
       blocks: [
         { t: "cmd", label: "extract and analyse VBA", code: "olevba document.doc\nolevba --decode document.doc     # deobfuscate embedded strings\nmd5sum document.doc              # hash for threat-intel lookup" },
+        { t: "note", kind: "info", title: "no mail client? read the .eml as text", text: "Don't assume the analysis box has Thunderbird — some don't. An <code>.eml</code> is plain text: open it in any editor (or <code>cat</code>/<code>less</code> it) and the <code>From</code>, <code>To</code>, <code>Subject</code>, <code>Date</code> and MIME attachment part are all right there. Save the attachment out of it (or base64-decode the part) before hashing." },
         { t: "note", kind: "info", title: "what to pull out of the macro", text: "The stage-2 URL, where it writes the download, and how it executes it. A macro that writes to <code>C:\\ProgramData\\</code> or <code>%TEMP%</code> and launches via <code>wscript.exe</code>/<code>mshta.exe</code> is the classic shape." },
         { t: "note", kind: "warn", title: "extension ≠ content", text: "A stage-2 payload downloaded as <code>update.png</code> that is actually JavaScript written to <code>update.js</code> is deliberate — image extensions survive naive egress filtering and look benign in proxy logs. Judge by what executes it, not what it's called." },
       ],
@@ -126,6 +147,25 @@ export default {
         ]},
         { t: "note", kind: "ok", title: "one image, the entire chain", text: "Delivery, execution, C2, and persistence all came out of a single memory capture — no disk image, no EDR, no PCAP. Worth remembering when scoping what to collect first on a live incident: <b>RAM before shutdown, always.</b>" },
         { t: "note", kind: "info", title: "infrastructure reuse is a real pivot", text: "Compare C2 IPs across campaigns from the same actor — cheap VPS providers get reused even when individual IPs rotate. Provider preference sits higher on the Pyramid of Pain than any single address, and beacon port habits (e.g. plain HTTP on 8080) tend to persist too." },
+      ],
+    },
+
+    // ---------- SOC FOLLOW-THROUGH ----------
+    {
+      title: "After the analysis — what the investigation is actually for",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "A challenge room ends when the questions are answered. A real incident doesn't — every IOC recovered above is a search term for finding <b>the victims you don't know about yet</b>. This is the step that separates an analyst from someone who can run Volatility." },
+        { t: "steps", steps: [
+          "<b>Pivot every IOC into the SIEM/mail gateway</b> — sender address, subject line, attachment filename, file hash, stage-2 URL, C2 IP. Spear-phishing is rarely sent to one person.",
+          "<b>Identify every recipient</b>, then split them: delivered-and-opened, delivered-not-opened, blocked. Each group gets different handling.",
+          "<b>Purge/retract the message</b> from mailboxes that still hold it — this is time-critical and the highest-value action available, because it prevents compromises rather than investigating them.",
+          "<b>Sweep endpoints</b> for the artifacts: the dropped paths, the scheduled task name, the registry value, and outbound connections to the C2 IP:port.",
+          "<b>Block</b> the sender, the staging domain, and the C2 at mail gateway / proxy / firewall.",
+          "<b>Then</b> remediate the known-compromised host — and remember the fileless persistence trap: the registry value is the payload.",
+        ]},
+        { t: "note", kind: "danger", title: "the clock is on containment, not analysis", text: "Perfect forensics delivered after five more users have opened the attachment is a worse outcome than partial findings that triggered a mail purge in the first twenty minutes. Once you have the sender, subject, and hash — enough to search on — <b>hand those off for containment and keep analysing in parallel</b>. Don't hold IOCs back waiting for a complete picture." },
+        { t: "note", kind: "info", title: "hash first, because it's free", text: "<code>md5sum</code>/<code>sha256sum</code> the attachment the moment you have it and check it against threat intel. If it's a known sample, the whole chain may already be documented — minutes of reading instead of hours of reversing. (Offline lab VMs can't reach VirusTotal; the habit still belongs in the workflow.)" },
       ],
     },
   ],
