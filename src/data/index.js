@@ -45,6 +45,7 @@ import elasticAlertTriagePlaybook from "./elastic-alert-triage-playbook.js";
 import windowsPrivescLateralMovement from "./windows-privesc-lateral-movement.js";
 import exfilReconstruction from "./exfil-reconstruction.js";
 import memoryForensics from "./memory-forensics.js";
+import filelessC2CredentialTheft from "./fileless-c2-credential-theft.js";
 
 export const sections = [
   wiresharkFilters,
@@ -91,6 +92,7 @@ export const sections = [
   windowsPrivescLateralMovement,
   exfilReconstruction,
   memoryForensics,
+  filelessC2CredentialTheft,
 ];
 
 export { config } from "./config.js";

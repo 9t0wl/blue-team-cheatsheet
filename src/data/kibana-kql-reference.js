@@ -64,6 +64,15 @@ export default {
       ],
     },
     {
+      title: "process.parent.pid — walk an attacker's execution tree one generation at a time",
+      span2: true,
+      blocks: [
+        { t: "cmd", label: "\"show me every child of this PID\"", code: "process.parent.pid: 5180\n# then re-pivot: take a PID from those results and query process.parent.pid on IT next" },
+        { t: "note", kind: "info", title: "the most precise pivot once you have a starting PID", text: "More reliable than time-window scrolling for following a specific process chain forward, because it's structural — Sysmon records the true parent PID — rather than adjacency in time. Walk it generation by generation: find the child, take its PID, query for <i>its</i> children, repeat." },
+        { t: "note", kind: "warn", title: "breaks down for in-memory/reflective execution", text: "<code>Invoke-Expression</code> and similar techniques that run decoded/decrypted code inside the <b>same process</b> create no new child PID — this pivot finds nothing because there's nothing to find. When a lead goes cold this way, switch to following the <i>same</i> PID forward in time (its later Sysmon events) instead of expecting a child." },
+      ],
+    },
+    {
       title: "winlog.task — filter by human-readable category, not just event ID",
       blocks: [
         { t: "cmd", label: "find account-management activity without knowing the exact event ID first", code: "winlog.channel:Security and winlog.task:\"User Account Management\"" },

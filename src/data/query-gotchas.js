@@ -38,6 +38,22 @@ export default {
       ],
     },
     {
+      title: "Elastic time-range picker — a narrow window looks identical to \"nothing here\"",
+      span2: true,
+      blocks: [
+        { t: "note", kind: "danger", title: "the trap", text: "A search that should obviously return a hit can come back with <b>zero results</b> purely because the time-range picker (top-right) doesn't cover it — Kibana gives no warning that events exist just outside the window. This looks exactly like a wrong query or missing data, and the natural instinct is to debug the search terms first." },
+        { t: "note", kind: "warn", title: "worked example (Boogeyman 3)", text: "A window set to end exactly at midnight silently hid a credential-dumping-tool download that happened <b>nine minutes past</b> the cutoff — a keyword search for the tool's own name returned nothing, which read as \"this data doesn't exist\" rather than \"my window doesn't cover it.\"" },
+        { t: "note", kind: "ok", title: "the fix as a reflex, not a last resort", text: "Whenever a search that should clearly hit comes back empty, <b>widen or check the time range before touching the query</b>. Setting it to a generous multi-day span while exploring unfamiliar data (then narrowing once you've found your footing) avoids the trap entirely." },
+      ],
+    },
+    {
+      title: "Wide keyword searches catch real leads and legitimate noise together",
+      blocks: [
+        { t: "note", kind: "warn", title: "the trap", text: "A broad wildcard like <code>*share*</code> also matches unrelated legitimate software containing the substring — e.g. <code>Microsoft.SharePoint.exe</code> (a normal OneDrive component) shows up right alongside real SMB-share-access commands." },
+        { t: "note", kind: "info", title: "validate before chasing a hit", text: "Check <b>integrity level</b> (attacker activity is often elevated; routine background services are usually Medium), <b>publisher/signature</b> (a signed Microsoft binary in its expected install path is a strong benign signal), and whether the path is a normal install location vs. a user-writable temp/staging directory. Once a hit is confirmed real, narrow to a specific suspected cmdlet (<code>cat</code>, <code>Get-Content</code>, <code>Copy-Item</code>) rather than continuing to search broadly." },
+      ],
+    },
+    {
       title: "Elastic KQL — precedence & case",
       blocks: [
         { t: "note", kind: "danger", text: "<code>AND</code> binds tighter than <code>OR</code>. <code>Country:\"US\" and User:\"Albert\" or User:\"james\"</code> parses as <code>(US AND Albert) OR james</code>. Always parenthesize mixed AND/OR." },
