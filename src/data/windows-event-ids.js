@@ -65,7 +65,7 @@ export default {
       blocks: [
         { t: "table", head: ["ID", "Description"], rows: [
           ["1", "Process creation"],
-          ["2", "A process changed a file's creation time"],
+          ["2", "A process changed a file's creation time (timestomping — compare <code>CreationUtcTime</code> vs <code>PreviousCreationUtcTime</code> in the event)"],
           ["3", "Network connection"],
           ["5", "Process terminated"],
           ["6", "Driver loaded"],
@@ -79,6 +79,8 @@ export default {
           ["23", "FileDelete"],
         ]},
         { t: "note", kind: "danger", title: "the PowerShell blind spot (ID 1)", text: "Sysmon Event ID 1 logs that <code>powershell.exe</code> launched — it does <b>not</b> capture commands typed inside the resulting interactive session. An attacker can run dozens of malicious commands (discovery, credential harvesting, malware download, process injection) inside one logged launch with <b>zero additional process-level logs</b> for any of it. This is exactly the gap tools like Empire / PowerSploit-era tradecraft have historically exploited." },
+        { t: "note", kind: "info", title: "RuleName can carry the MITRE technique ID for free", text: "When a Sysmon config maps a detection rule to ATT&CK, the <code>RuleName</code> field on the matching event comes back as <code>technique_id=T1070.006,technique_name=Timestomp</code> style text — no separate lookup needed, the mapping is already in the raw event. Worth checking <code>RuleName</code> on <b>every</b> event during triage, not just the ones you expect to be tagged." },
+        { t: "note", kind: "info", title: "correlating DNS (ID 22) to FileCreate (ID 11) by time", text: "There's often no field linking a downloaded file to the DNS query that resolved its download host. When asked \"what delivered this file,\" pull the file's <code>FileCreate</code> timestamp, then find the <code>DnsEvent</code> (ID 22) with the <b>nearest preceding</b> timestamp — that <code>QueryName</code> is the delivery source. Confirmed on HTB Sherlock Unit42 (malware delivered via Dropbox, DNS query to <code>*.dropboxusercontent.com</code> landed ~1s before the file-create event)." },
       ],
     },
     {
