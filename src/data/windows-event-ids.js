@@ -84,6 +84,24 @@ export default {
       ],
     },
     {
+      title: "Tooling — Parsing EVTX: Chainsaw vs EZ Tools",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "Two ways to turn a raw <code>.evtx</code> file into something filterable. Same job, different interface — pick whichever fits the moment." },
+        { t: "cmd", label: "Chainsaw — full-text search", code: "chainsaw search \"<string>\" -i Microsoft-Windows-Sysmon-Operational.evtx" },
+        { t: "cmd", label: "Chainsaw — filter by Event ID", code: "chainsaw search -t 'Event.System.EventID: =22' Microsoft-Windows-Sysmon-Operational.evtx" },
+        { t: "cmd", label: "Chainsaw — JSON piped to jq, sorted", code: "chainsaw search -t 'Event.System.EventID: =22' Microsoft-Windows-Sysmon-Operational.evtx --json \\\n  | jq -r '.[] | \"\\(.timestamp) \\(.Event.EventData.QueryName)\"' | sort" },
+        { t: "cmd", label: "EvtxECmd — convert to CSV", code: "EvtxECmd.exe -f 'sysmon.evtx' --csv 'C:\\Output' --csvf sysmon.csv" },
+        { t: "table", head: ["", "Chainsaw", "EZ Tools (EvtxECmd + Timeline Explorer)"], rows: [
+          ["Interface", "CLI, tau-expression filters", "CLI parse → GUI browse/filter"],
+          ["Platform", "Linux (Kali Purple) or Windows", "Windows only (Timeline Explorer is WinForms)"],
+          ["Best for", "fast targeted queries, scripting, jq pipelines", "visual column filtering/grouping, no query syntax to remember"],
+          ["Local install", "Kali Purple", "MSI — <code>D:\\Tools\\ZimmermanTools\\net9</code>"],
+        ]},
+        { t: "note", kind: "info", title: "confirmed interchangeable on Unit42", text: "HTB Sherlock Unit42 was solved entirely with Chainsaw (search + tau filters + jq). Same room would've worked identically through EvtxECmd → CSV → Timeline Explorer instead — the ProcessCreate/FileCreate/DnsEvent/ProcessTerminate filtering is the same underlying data either way, just CLI-query vs GUI-column-filter to get there." },
+      ],
+    },
+    {
       title: "PowerShell history file — working around the blind spot",
       span2: true,
       blocks: [
