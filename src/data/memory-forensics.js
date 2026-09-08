@@ -70,6 +70,17 @@ export default {
     },
 
     {
+      title: "Structured output — CSV into a browsable triage tool",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "<code>grep</code> against redirected text output works, but every plugin has its own column layout and you're re-deriving the filter each time. <code>-r csv</code> gives every plugin the same shape, which means one tool can read all of them — sortable columns, a live filter, and rows flagged automatically instead of hand-rolled <code>grep -vE</code> chains." },
+        { t: "cmd", label: "export the core triage set as CSV", code: "vol -f memdump.raw windows.info                    # confirm the profile parses first\nvol -f memdump.raw -r csv windows.pstree   > pstree.csv\nvol -f memdump.raw -r csv windows.cmdline  > cmdline.csv\nvol -f memdump.raw -r csv windows.netscan  > netscan.csv\n# any other plugin works the same way:\nvol -f memdump.raw -r csv windows.filescan > filescan.csv" },
+        { t: "note", kind: "ok", title: "vol-triage.html", text: "Single-file browser tool in <code>dfir-tools</code> — load the CSVs above via <b>+ Add data</b> and get sortable/filterable tables, auto-flagged rows (LOLBins, encoded PowerShell, <code>Public</code>/<code>Temp</code> paths as critical), and click-any-PID cross-referencing between the process and network tabs. Runs entirely client-side; nothing loaded into it leaves the browser, so it's safe on live case data. <code>~/tools/dfir-tools/vol-triage.html</code> — full docs in that repo's README." },
+        { t: "note", kind: "info", title: "auto-detected, not hardcoded", text: "The tool reads the CSV header to decide what it's looking at — <code>PID</code> + <code>ImageFileName</code>/<code>Args</code> reads as a process table, <code>ForeignAddr</code> + <code>State</code> reads as a network table (and gets beacon detection: the same <code>ForeignAddr</code> across ≥2 non-listening sockets flags as a possible repeat C2 hit). Anything else still loads as a plain sortable/filterable table, so it isn't limited to just these three plugins." },
+      ],
+    },
+
+    {
       title: "Dumping a single process's memory",
       blocks: [
         { t: "cmd", label: "dump, then string it", code: "vol -f mem.raw windows.memmap --dump --pid <pid>\nstrings pid.<pid>.dmp    | grep -i '<keyword>'\nstrings -el pid.<pid>.dmp | grep -i '<keyword>'" },
