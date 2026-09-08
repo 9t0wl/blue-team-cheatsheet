@@ -102,6 +102,16 @@ export default {
       ],
     },
     {
+      title: "Tooling — PECmd (Prefetch)",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "Prefetch (<code>C:\\Windows\\Prefetch\\*.pf</code>) is a Windows performance-caching feature that silently records, for every executable that's ever run, its run count, first/last-run timestamps, and every file/DLL it loaded. Forensically it's one of the strongest <b>\"this program executed\"</b> artifacts — it survives even after the binary itself is deleted." },
+        { t: "cmd", label: "PECmd — parse a whole folder at once", code: "PECmd.exe -d \"C:\\Windows\\Prefetch\" --csv \"C:\\Output\" --csvf prefetch.csv" },
+        { t: "note", kind: "info", title: "Prefetch has no dedicated \"path\" field — recover it from Files Loaded", text: "A prefetch record's own <code>Executable Name</code> column is just the filename (e.g. <code>RUBEUS.EXE</code>), not its full path. To get the actual path the binary ran from, double-click into the <b>Files Loaded</b> column in Timeline Explorer — every prefetch record lists the files it touched, and the executable's own path is almost always among them, e.g. <code>\\VOLUME{...}\\USERS\\ALONZO.SPIRE\\DOWNLOADS\\RUBEUS.EXE</code>. Translate the <code>\\VOLUME{GUID}\\</code> prefix to <code>C:\\</code> and you have the full path." },
+        { t: "note", kind: "info", title: "confirmed on HTB Sherlock Campfire-1", text: "Task asked for the full path of the Kerberoasting tool. The prefetch <code>Executable Name</code> column only showed <code>RUBEUS.EXE</code>; the actual answer (<code>C:\\Users\\alonzo.spire\\Downloads\\Rubeus.exe</code>) came from opening that row's <b>Files Loaded</b> cell and finding Rubeus's own path listed among the files it referenced at runtime." },
+      ],
+    },
+    {
       title: "PowerShell history file — working around the blind spot",
       span2: true,
       blocks: [
