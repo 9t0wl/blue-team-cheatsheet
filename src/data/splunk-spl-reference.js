@@ -83,7 +83,7 @@ export default {
           ["table f1 f2 f3", "keep only these fields, in this column order"],
           ["sort -field / sort +field", "descending / ascending sort"],
           ["dedup field", "keep only the first event per distinct field value"],
-          ["where <expr>", "filter on a computed or extracted field — unlike the base search, works on eval/stats output"],
+          ["<code>where &lt;expr&gt;</code>", "filter on a computed or extracted field — unlike the base search, works on eval/stats output"],
           ["rename old AS new", "relabel a field for display"],
           ["head N / tail N", "keep only the first / last N results"],
         ]},

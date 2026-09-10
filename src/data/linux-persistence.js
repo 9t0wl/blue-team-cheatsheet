@@ -40,13 +40,13 @@ export default {
       span2: true,
       blocks: [
         { t: "table", head: ["Technique", "Planted via", "Detect via"], rows: [
-          ["Cron job", "new line in /var/spool/cron/<user> or a file in /etc/cron.d/ (APT29 Goldmax; Rocke cryptominer's */10 re-download job)", "monitor cron files for changes (ausearch -i -f /etc/crontab); watch for crontab process execution"],
+          ["Cron job", "new line in <code>/var/spool/cron/&lt;user&gt;</code> or a file in <code>/etc/cron.d/</code> (APT29 Goldmax; Rocke cryptominer's */10 re-download job)", "monitor cron files for changes (ausearch -i -f /etc/crontab); watch for crontab process execution"],
           ["Systemd service", "unit file in /lib/systemd/system/ or /etc/systemd/system/, often disguised with a fake description (Sandworm/Cyclops Blink)", "monitor /etc/systemd/system/ for changes; watch for systemctl execution"],
           ["New backdoor user", "useradd/usermod creates a user, adds to a privileged group (sudo)", "grep -E \"useradd|usermod\" on auth.log, then walk the process tree from the resulting ppid"],
           ["Backdoor SSH key", "attacker's public key appended to ~/.ssh/authorized_keys (same trick as Dota3)", "file-integrity monitoring on authorized_keys — NOT process logs"],
           ["Application-level (web shell)", "backdoor planted inside a compromised app itself, e.g. a WSO shell via breached WordPress admin", "explicit blind spot — no cron/systemd/SSH-key artifact at all"],
         ]},
-        { t: "note", kind: "danger", title: "SSH key backdoor is nearly invisible to process logs", text: "echo \"<key>\" >> authorized_keys is a shell BUILTIN — auditd logs it simply as a generic bash process, not as echo with visible arguments. Process-creation logging alone will miss it; file-integrity monitoring on the key file itself is the reliable detection." },
+        { t: "note", kind: "danger", title: "SSH key backdoor is nearly invisible to process logs", text: "<code>echo \"&lt;key&gt;\" &gt;&gt; authorized_keys</code> is a shell BUILTIN — auditd logs it simply as a generic bash process, not as echo with visible arguments. Process-creation logging alone will miss it; file-integrity monitoring on the key file itself is the reliable detection." },
       ],
     },
     {

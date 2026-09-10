@@ -1,6 +1,7 @@
 // Pure rendering: turns section/card/block data into HTML strings.
-// Content in data files is trusted (authored in-repo), so inline HTML in
-// `text` fields is passed through; only code + table cells are escaped.
+// Content in data files is trusted (authored in-repo), so inline HTML is
+// passed through everywhere except `cmd` code, which is escaped + tinted.
+// Table cells that need literal angle brackets must use &lt;/&gt; entities.
 
 export function esc(s) {
   return String(s)
@@ -34,12 +35,7 @@ function renderBlock(b) {
     case "table": {
       const th = b.head.map((h) => `<th>${esc(h)}</th>`).join("");
       const tr = b.rows
-        .map(
-          (r) =>
-            `<tr>${r
-              .map((c, i) => (i === 0 ? `<td>${esc(c)}</td>` : `<td>${c}</td>`))
-              .join("")}</tr>`
-        )
+        .map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`)
         .join("");
       return `<table class="tbl"><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table>`;
     }

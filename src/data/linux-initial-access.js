@@ -22,7 +22,7 @@ export default {
       span2: true,
       blocks: [
         { t: "txt", text: "Same MITRE technique as Windows' vulnerable mail server, Linux-flavored. Any public-facing app is a risk surface — real examples: Zimbra CVE (arbitrary OS command execution), exposed Docker API (cloud breach entry point), Palo Alto firewall CVE (full OS control), WordPress plugins (web shell uploads)." },
-        { t: "note", kind: "warn", title: "app logs rarely self-report a zero-day", text: "But they still leave usable artifacts — worked example: a \"ping a host\" web app passes input straight into a shell (ping -c2 <input>) with no sanitization. In the access log, this shows up as Linux commands appearing inside query parameters instead of an IP (?host=;whoami;ls instead of ?host=8.8.8.8) — the query string itself is the IOC." },
+        { t: "note", kind: "warn", title: "app logs rarely self-report a zero-day", text: "But they still leave usable artifacts — worked example: a \"ping a host\" web app passes input straight into a shell (<code>ping -c2 &lt;input&gt;</code>) with no sanitization. In the access log, this shows up as Linux commands appearing inside query parameters instead of an IP (?host=;whoami;ls instead of ?host=8.8.8.8) — the query string itself is the IOC." },
       ],
     },
     {

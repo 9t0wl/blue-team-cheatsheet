@@ -40,7 +40,7 @@ export default {
           ["TXT (SPF)", "includes Mailspike, ends ?all (neutral)", "a neutral SPF policy doesn't hard-fail spoofed mail — worth flagging in a phishing investigation"],
           ["NS", "hosted on csof.net nameservers", "third-party DNS management, not self-hosted"],
           ["MX", "two mail servers, equal priority", "standard redundant mail setup"],
-          ["SOA", "primary NS ns1.<domain>, standard refresh/retry/expire", "nothing anomalous in isolation"],
+          ["SOA", "primary NS <code>ns1.&lt;domain&gt;</code>, standard refresh/retry/expire", "nothing anomalous in isolation"],
         ]},
         { t: "note", kind: "info", title: "simplicity cuts both ways", text: "No AAAA/CNAME and a straightforward NS/MX setup isn't inherently malicious, but minimal configuration can also indicate quickly-stood-up infrastructure rather than a mature, long-lived legitimate presence." },
       ],

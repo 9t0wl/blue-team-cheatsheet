@@ -10,10 +10,10 @@ export default {
       blocks: [
         { t: "txt", text: "SPL builds a query as base search followed by a chain of processing commands (<code>| table</code>, <code>| stats</code>, <code>| eval</code>...). KQL is just the base-search half — a single filter expression. Everything else (adding columns, sorting, aggregating) happens through the Kibana UI instead of more query syntax." },
         { t: "table", head: ["Task", "Splunk (SPL)", "Kibana (KQL + UI)"], rows: [
-          ["Scope to a source", "index=<idx>", "_index:<name> (data view may span multiple indices)"],
+          ["Scope to a source", "<code>index=&lt;idx&gt;</code>", "<code>_index:&lt;name&gt;</code> (data view may span multiple indices)"],
           ["Add a column", "| table field1 field2", "click the + next to a field in the left-hand field list"],
           ["Sort oldest-first", "| sort + _time", "click the arrow on the @timestamp column header"],
-          ["Filter a computed value", "| where <expr>", "no direct equivalent — KQL filters raw/parsed fields only, not eval'd values"],
+          ["Filter a computed value", "<code>| where &lt;expr&gt;</code>", "no direct equivalent — KQL filters raw/parsed fields only, not eval'd values"],
           ["Aggregate/count", "| stats count by field", "Field statistics tab, or a Lens/visualization panel — not inline in the query bar"],
         ]},
         { t: "note", kind: "info", title: "field discovery leans on the UI more than Splunk does", text: "With no <code>stats</code> pivot to type, finding what fields exist and what values they hold happens by browsing the left-hand field panel (click a field to see its top values) rather than composing an aggregation query." },
@@ -26,7 +26,7 @@ export default {
         { t: "table", head: ["Setting", "What to do", "Why"], rows: [
           ["Data view", "select the correct data view (e.g. \"Alert Triage With Elastic\") from the dropdown", "a data view can span multiple underlying indices — picking the wrong one silently limits what you can search"],
           ["Time range", "set to Entire data range before investigating unfamiliar data", "same trap as Splunk's default time-range picker — a narrow window silently drops events outside it with no error"],
-          ["Index scoping within a data view", "_index:<name> in the query bar", "narrows a multi-index data view to just the source you're investigating (e.g. weblogs vs. the Windows/Sysmon index)"],
+          ["Index scoping within a data view", "<code>_index:&lt;name&gt;</code> in the query bar", "narrows a multi-index data view to just the source you're investigating (e.g. weblogs vs. the Windows/Sysmon index)"],
         ]},
       ],
     },
@@ -41,7 +41,7 @@ export default {
           ["field1:value1 or field2:value2", "OR — lowercase, unlike SPL where OR must be uppercase"],
           ["not field:value", "negation"],
           ["field:*", "field exists (any value)"],
-          ["field >= value / field <= value", "range comparison — works on numbers and ISO 8601 timestamps alike"],
+          ["<code>field &gt;= value</code> / <code>field &lt;= value</code>", "range comparison — works on numbers and ISO 8601 timestamps alike"],
         ]},
         { t: "note", kind: "warn", title: "lowercase booleans — the trap when switching stacks mid-session", text: "Typing <code>OR</code> in KQL doesn't error, but muscle memory from SPL (where OR must be uppercase) can make you second-guess correct KQL syntax. KQL's and/or/not are case-insensitive in practice but conventionally written lowercase." },
       ],
@@ -84,9 +84,9 @@ export default {
       span2: true,
       blocks: [
         { t: "table", head: ["Concept", "Splunk (SPL)", "Kibana (KQL)"], rows: [
-          ["Source scoping", "index=<idx>", "_index:<name>"],
+          ["Source scoping", "<code>index=&lt;idx&gt;</code>", "<code>_index:&lt;name&gt;</code>"],
           ["Event-code filter", "EventCode=4624", "winlog.event_id:4624"],
-          ["Sourcetype", "sourcetype=<st>", "mostly implicit — ECS pre-normalizes via _index / event.module"],
+          ["Sourcetype", "<code>sourcetype=&lt;st&gt;</code>", "mostly implicit — ECS pre-normalizes via _index / event.module"],
           ["Field extraction from raw text", "rex field=_raw \"...\"", "largely unnecessary — ECS fields (process.*, winlog.*, powershell.*) arrive pre-parsed"],
           ["Build a table", "| table f1 f2 f3", "click + next to each field in the left panel"],
           ["Sort oldest first", "| sort + _time", "click the @timestamp column header arrow"],
