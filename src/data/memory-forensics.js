@@ -91,6 +91,22 @@ export default {
       ],
     },
 
+    // ---------- MASQUERADING ----------
+    {
+      title: "Masquerading — validate path and parentage, not just name",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "A malicious process using a well-known system name (<code>svchost.exe</code>, <code>csrss.exe</code>, <code>lsass.exe</code>) will fool a human scanning Task Manager, because the name is all a person glances at. It won't fool <code>pstree</code>, because a binary can rename itself but it can't fake where it lives on disk or who's allowed to launch it. MITRE ATT&CK <b>T1036.005</b> (Match Legitimate Name or Location)." },
+        { t: "table", head: ["Check", "Real svchost.exe", "Red flag"], rows: [
+          ["Path", "<code>C:\\Windows\\System32\\</code> only", "Anywhere else — Downloads, Temp, AppData"],
+          ["Parent", "Always <code>services.exe</code> (the SCM)", "Any other PPID — implies manual/browser-driven execution"],
+        ]},
+        { t: "cmd", label: "find every process claiming a system name, check its own path column", code: "vol -f memdump.raw -r csv windows.pstree > pstree.csv\n# load into vol-triage.html, filter to the name, read PATH — not just ImageFileName" },
+        { t: "note", kind: "danger", title: "name-based noise/allowlists have this exact blind spot", text: "A triage tool (or EDR allowlist) that hides <code>svchost.exe</code> rows by <b>name</b> alone, with no path check, will silently hide a masquerading instance from you — the same trick that fools a human. Always pair a name check with path + parent validation, never name alone." },
+        { t: "note", kind: "ok", title: "the tell can be one level up", text: "If the masquerading process itself doesn't trip a keyword flagger, look at what it <i>spawns</i>. A LOLBin child (<code>cmd.exe</code>, <code>powershell.exe</code>) flagged on its own merits will point you at an unflagged parent worth checking directly." },
+      ],
+    },
+
     // ---------- STRINGS ----------
     {
       title: "strings on a memory image — run it twice",
