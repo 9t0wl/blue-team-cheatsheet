@@ -34,6 +34,21 @@ export default {
       ],
     },
     {
+      title: "Prefetch — three different \"when did it run\" answers",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "A <code>.pf</code> file carries timestamps in two separate places, and they don't always agree." },
+        { t: "table", head: ["Source", "What it tells you", "Authority"], rows: [
+          ["<code>.pf</code> file's own filesystem Created date", "when the .pf inode first appeared on the volume — usually ≈ first execution", "Approximation — a step removed from the actual event"],
+          ["<code>.pf</code> file's own filesystem Modified date", "usually ≈ most recent execution (Prefetch rewrites the same file every run)", "Approximation"],
+          ["PECmd's parsed <b>internal run-time array</b> (up to 8 stored timestamps + a Run Count header)", "written directly by the Prefetcher subsystem into the file's own binary structure at execution time", "<b>Authoritative</b> — this is the actual execution-tracking data, not a side effect of it"],
+        ]},
+        { t: "note", kind: "warn", title: "the discrepancy is real, not noise", text: "Seen a 10-second gap between a <code>.pf</code>'s filesystem Created timestamp and PECmd's internal 'first run' timestamp on the same file. When a task/investigation needs precision on first/last execution, prefer the parsed internal array over raw filesystem metadata — run <code>PECmd -f &lt;file&gt; --csv &lt;dir&gt;</code> and read <b>Run count</b> / <b>Last run</b> / <b>Other run times</b> from its console output or CSV, don't eyeball Explorer's file properties." },
+        { t: "note", kind: "info", title: "Run Count vs. the stored timestamps", text: "Run Count keeps incrementing indefinitely; the stored run-time array is capped (8 slots on Windows 10-era Prefetch). Past 8 executions, Run Count and the visible timestamp list will disagree — Run Count is still correct for \"how many total,\" the array only shows the most recent 8." },
+      ],
+    },
+
+    {
       title: "Which machine actually runs it",
       span2: true,
       blocks: [

@@ -30,6 +30,16 @@ export default {
       ],
     },
     {
+      title: "Zed (Zui/Brim) — a typed field silently rejects a quoted literal",
+      span2: true,
+      blocks: [
+        { t: "note", kind: "danger", title: "the trap", text: "Zed is strictly typed. A field like <code>id.resp_h</code> is a native <code>ip</code> type — comparing it against a <b>quoted string</b> (<code>id.resp_h==\"45.12.253.75\"</code>) never matches, and produces <b>no error</b>. The query just returns zero rows, which reads exactly like \"my filter excluded everything\" rather than a type mismatch." },
+        { t: "cmd", label: "wrong vs. correct", code: "id.resp_h==\"45.12.253.75\"   # silently empty — string vs ip\nid.resp_h==45.12.253.75     # correct — unquoted ip literal" },
+        { t: "note", kind: "info", text: "Same family of bug as Splunk's unscoped-search trap and SIEM field-normalization mismatches above — when a query returns suspiciously nothing, check field <i>types</i>, not just filter logic." },
+      ],
+    },
+
+    {
       title: "Log normalization — one schema, many raw formats",
       span2: true,
       blocks: [

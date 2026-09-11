@@ -57,6 +57,17 @@ export default {
       ],
     },
     {
+      title: "When static PE metadata is ambiguous — pivot to a public sandbox by hash",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "A file's own <code>VERSIONINFO</code> resource (via <code>exiftool</code> or Explorer's Properties → Details tab — <code>FileDescription</code>, <code>ProductName</code>, <code>ProductVersion</code>) is the fast first check for \"what is this actually claiming to be,\" but it's attacker-controlled and can be blank, stripped, or genuinely misleading." },
+        { t: "note", kind: "warn", title: "an install directory can masquerade as a product name", text: "A <code>FileDescription</code> value that looks plausible isn't automatically the impersonated software's name — it can just as easily be an install directory or internal build label the malware author left behind. Don't accept the first metadata string that looks name-shaped without corroboration." },
+        { t: "cmd", label: "pivot: search the hash on a public sandbox, not just an AV aggregator", code: "# app.any.run — search by SHA256/MD5\n# prior researchers may have already detonated the identical sample" },
+        { t: "note", kind: "ok", title: "check the sandbox's Files tab", text: "A full detonation report often includes dropped files a static scan never touches — readmes, EULAs, license dialogs, help files — which can state the impersonated product's real name and version in plain text, resolving what VERSIONINFO alone left ambiguous." },
+      ],
+    },
+
+    {
       title: "Hash-lookup triage checklist",
       blocks: [
         { t: "steps", items: [

@@ -84,6 +84,21 @@ export default {
     },
 
     {
+      title: "Getting a byte-exact hash out of memory — DataSectionObject vs ImageSectionObject",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "<code>windows.dumpfiles --virtaddr &lt;offset&gt;</code> on a file object can produce up to three dumps: <code>ImageSectionObject</code>, <code>DataSectionObject</code>, and <code>SharedCacheMap</code>. Only one of these is ever safe to hash and compare against a known-good value." },
+        { t: "table", head: ["Dump", "What it is", "Safe to hash?"], rows: [
+          ["ImageSectionObject", "the loader's page-realigned, memory-mapped copy — sections padded to page boundaries", "<b>Never</b> — structurally different from the file on disk by design"],
+          ["DataSectionObject", "reconstructed from the VACB (Virtual Address Control Block) cache — only whatever file chunks were actually cached at snapshot time", "Only if the whole file was cached — uncached/evicted pages come back <b>zero-padded</b>, silently corrupting the hash"],
+          ["SharedCacheMap", "the cache manager's own bookkeeping structure, not file content", "No — not a file dump at all"],
+        ]},
+        { t: "note", kind: "danger", title: "the trap looks clean", text: "A bad <code>DataSectionObject</code> dump is the <b>right size</b> and opens fine — nothing about it screams \"wrong.\" It'll just hash differently from the real file, and a hash that comes back 0/N detected on VirusTotal when you expected a known-malicious sample is itself a signal something's off, not proof the file is benign." },
+        { t: "note", kind: "ok", title: "the fix — don't reconstruct, extract", text: "Whenever a file also exists on disk or crossed the network, pull it from <b>there</b> instead of trusting a memory reconstruction: a disk-image export (FTK Imager / Autopsy), or a Zeek/Wireshark object export (<code>files.log</code> with a real <code>filename</code>, or Wireshark's File → Export Objects). Memory reconstruction is inference; disk/network extraction is ground truth." },
+      ],
+    },
+
+    {
       title: "Dumping a single process's memory",
       blocks: [
         { t: "cmd", label: "dump, then string it", code: "vol -f mem.raw windows.memmap --dump --pid <pid>\nstrings pid.<pid>.dmp    | grep -i '<keyword>'\nstrings -el pid.<pid>.dmp | grep -i '<keyword>'" },

@@ -15,6 +15,7 @@ import hostId from "./host-id.js";
 import tunnelling from "./tunnelling.js";
 import ftpAnalysis from "./ftp-analysis.js";
 import httpAnalysis from "./http-analysis.js";
+import zeekZuiTriage from "./zeek-zui-triage.js";
 import exfilQuickref from "./exfil-quickref.js";
 import httpsDecrypt from "./https-decrypt.js";
 import cleartextCreds from "./cleartext-creds.js";
@@ -63,6 +64,7 @@ export const sections = [
   tunnelling,
   ftpAnalysis,
   httpAnalysis,
+  zeekZuiTriage,
   exfilQuickref,
   httpsDecrypt,
   cleartextCreds,
