@@ -35,6 +35,22 @@ export default {
       ],
     },
     {
+      title: "PsExec / PSEXESVC lateral movement (Tracer)",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "PsExec's client binary never touches the target, only the service it drops does. When PsExec connects to a remote host, it copies itself to <code>ADMIN$</code>, renames the copy to <b>PSEXESVC.exe</b>, drops it in <code>C:\\Windows\\</code> (not System32), installs and starts it as a temporary service, opens three named pipes for stdin/stdout/stderr redirection, and drops a session-unique key file. All of this happens on <b>every single invocation</b>, and PsExec auto-deletes the service and binary the instant the session ends. None of that mechanism is itself an indicator of compromise, it's identical whether an authorized admin or an attacker ran it. Volume and context (how many times, on what kind of host, in what window) is the actual signal." },
+        { t: "table", head: ["Artifact", "Where to look", "What it shows"], rows: [
+          ["Service install", "System.evtx, Event ID 7045", "<code>Service Name: PSEXESVC</code>, <code>Service File Name: C:\\Windows\\PSEXESVC.exe</code>, once per invocation"],
+          ["Execution count/history", "Prefetch (PECmd), <code>PSEXESVC.EXE</code> Run Count", "Cumulative total execution count, uncapped"],
+          ["Execution timestamps", "Prefetch Timeline file", "Only the <b>last 8</b> run timestamps are retained (ring buffer) even if Run Count is higher, don't assume Timeline row count equals Run Count"],
+          ["Session key file", "USN Journal (<code>$J</code>, MFTECmd)", "<code>PSEXEC-&lt;hostname&gt;-&lt;8-char hex&gt;.key</code>, unique random suffix per session"],
+          ["I/O pipes", "Sysmon Event ID 17 (PipeCreated) / 18 (PipeConnected)", "<code>\\PSEXESVC-&lt;hostname&gt;-&lt;pid&gt;-stdin/stdout/stderr</code>, one triplet per session"],
+        ]},
+        { t: "note", kind: "warn", title: "retention caps differ by artifact type", text: "Prefetch and the USN Journal both silently cap at the last 8 historical entries. Sysmon's operational log doesn't have that ring-buffer limit (only overall log-file size), so it can be the more complete source for counting total executions if prefetch/USN Journal history has already rolled over." },
+        { t: "note", kind: "info", title: "hostname isn't always a fixed field", text: "The event log <code>Computer</code> field reflects whatever hostname was active <i>when that specific event was written</i>, not a live property. A renamed/re-imaged host can show multiple different values across its own log history; correlate against the incident's actual timeframe rather than trusting the most common value." },
+      ],
+    },
+    {
       title: "Compiled/custom C2 binaries — the UA still gives them away",
       blocks: [
         { t: "txt", text: "A custom-compiled C2 implant has no filename or hash reputation yet, but its language runtime's own HTTP client often self-identifies in the <b>User-Agent</b> header — same fingerprinting logic as known offensive-tool UAs (sqlmap, Nikto), just applied to bespoke malware instead of public tools." },
