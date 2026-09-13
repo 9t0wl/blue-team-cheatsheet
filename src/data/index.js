@@ -49,6 +49,7 @@ import windowsPrivescLateralMovement from "./windows-privesc-lateral-movement.js
 import exfilReconstruction from "./exfil-reconstruction.js";
 import memoryForensics from "./memory-forensics.js";
 import filelessC2CredentialTheft from "./fileless-c2-credential-theft.js";
+import fileDbArtifactRecovery from "./file-db-artifact-recovery.js";
 
 export const sections = [
   wiresharkFilters,
@@ -99,6 +100,7 @@ export const sections = [
   exfilReconstruction,
   memoryForensics,
   filelessC2CredentialTheft,
+  fileDbArtifactRecovery,
 ];
 
 export { config } from "./config.js";
