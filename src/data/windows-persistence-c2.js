@@ -57,6 +57,19 @@ export default {
       ],
     },
     {
+      title: "Persistence — COM/CLSID hijacking via a shell object (T1546.015)",
+      src: "HTB Sherlock: ReliableThreat",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "Every desktop shell object (Recycle Bin, This PC, Control Panel, etc.) is backed by a COM CLSID registered under <code>HKCU\\Software\\Classes\\CLSID\\&lt;GUID&gt;</code>. Writing a <code>\\shell\\open\\command</code> value under that CLSID hijacks the verb Explorer fires when the user interacts with the object — for the Recycle Bin specifically, that's <b>every double-click on the desktop icon</b>. No admin/elevation required, it's entirely HKCU, and the \"legitimate component\" being abused is something the user touches constantly without a second thought." },
+        { t: "cmd", label: "the Recycle Bin's CLSID — worth memorizing, it recurs", code: "HKCU\\Software\\Classes\\CLSID\\{645FF040-5081-101B-9F08-00AA002F954E}\\shell\\open\\command" },
+        { t: "note", kind: "info", title: "how a compiled dropper tool reveals its own registry writes", text: "A small persistence-setting binary (compiled with `RegCreateKeyExA`/`RegSetValueExA` imports) will usually keep its target CLSID/key path as a single ASCII string literal, even when other content is obfuscated. `strings sample.exe | grep -i software` surfaces the exact key it's built to write — evidence of intent, straight from the binary's own imports and constant pool, no dynamic analysis required." },
+        { t: "note", kind: "danger", title: "the point-in-time trap — a live-state search can be correct and still find nothing", text: "If the persistence-writing tool is dropped and executed <i>after</i> the memory image was captured, a live registry search (Volatility, a mounted hive) will correctly show the key as absent, even when you've checked the exact right CLSID. The write genuinely doesn't exist yet in that snapshot. When a well-reasoned live-state search comes back clean, check whether the evidence source captures the right moment before concluding the technique wasn't used — a dropped tool's own static strings/imports can prove intent even when its effects never made it into the specific snapshot you're holding. Cross-referencing evidence sources captured at different times (here: a memory dump vs. a separately-timestamped disk image) is how this gap gets caught." },
+        { t: "note", kind: "ok", title: "detection angle", text: "Baseline <code>HKCU\\Software\\Classes\\CLSID\\*\\shell</code> for well-known system object GUIDs (Recycle Bin, My Computer, Control Panel) — these should almost never have custom `shell\\open\\command` overrides on a normal endpoint. Any value present at all is worth investigating." },
+      ],
+    },
+
+    {
       title: "Impact & why persistence matters",
       span2: true,
       blocks: [

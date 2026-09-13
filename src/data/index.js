@@ -37,6 +37,7 @@ import linuxDiscovery from "./linux-discovery.js";
 import linuxPersistence from "./linux-persistence.js";
 import malwareClassification from "./malware-classification.js";
 import malwareAnalysisIntro from "./malware-analysis-intro.js";
+import jsDeobfuscation from "./js-deobfuscation.js";
 import fileHashThreatIntel from "./file-hash-threat-intel.js";
 import ipDomainThreatIntel from "./ip-domain-threat-intel.js";
 import splunkSplReference from "./splunk-spl-reference.js";
@@ -86,6 +87,7 @@ export const sections = [
   linuxPersistence,
   malwareClassification,
   malwareAnalysisIntro,
+  jsDeobfuscation,
   fileHashThreatIntel,
   ipDomainThreatIntel,
   splunkSplReference,
