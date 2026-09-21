@@ -43,6 +43,7 @@ export default {
         ]},
         { t: "cmd", label: "PowerShell — direct byte-offset read against $MFT", code: "$mftPath = \"C:\\path\\to\\`$MFT\"\n$offset = <EntryNumber> * 1024\n$fs = [System.IO.File]::OpenRead($mftPath)\n$fs.Seek($offset, 'Begin') | Out-Null\n$buffer = New-Object byte[] 1024\n$fs.Read($buffer, 0, 1024) | Out-Null\n$fs.Close()\n[System.Text.Encoding]::ASCII.GetString($buffer) -replace '[^\\x20-\\x7E]', '.'" },
         { t: "note", kind: "warn", title: "the `$` in `$MFT` needs escaping in PowerShell", text: "Double-quoted strings interpolate <code>$MFT</code> as a variable reference and silently resolve to empty. Use a backtick (<code>`$MFT</code>) or single-quote the path segment." },
+        { t: "note", kind: "info", title: "no $MFT in the collection, or the file is too big to be resident?", text: "This trick has two hard limits: it needs <code>$MFT</code> to have been collected, and it only works for files small enough to be resident. When either fails, the other place a missing file's <b>text</b> commonly survives is the Windows Search index — see <b>Windows Search Index Recovery (Windows.edb / ESE)</b>. Two different answers to the same question: \"the file wasn't collected, can I still read it?\"" },
       ],
     },
   ],
