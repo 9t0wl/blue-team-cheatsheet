@@ -1,7 +1,7 @@
 export default {
   id: "file-db-artifact-recovery",
-  title: "Structured File & Artifact Recovery (InnoDB, MFT, RDP Logon Pairs)",
-  src: "Jinkies (HTB Sherlock, CDSA Prep Track)",
+  title: "Structured File & Artifact Recovery (InnoDB, MFT, RDP Logon Pairs, Timestomping)",
+  src: "Jinkies + Detroit Becomes Human (HTB Sherlocks, CDSA Prep Track)",
   icon: "🗃️",
   cards: [
     {
@@ -44,6 +44,49 @@ export default {
         { t: "cmd", label: "PowerShell — direct byte-offset read against $MFT", code: "$mftPath = \"C:\\path\\to\\`$MFT\"\n$offset = <EntryNumber> * 1024\n$fs = [System.IO.File]::OpenRead($mftPath)\n$fs.Seek($offset, 'Begin') | Out-Null\n$buffer = New-Object byte[] 1024\n$fs.Read($buffer, 0, 1024) | Out-Null\n$fs.Close()\n[System.Text.Encoding]::ASCII.GetString($buffer) -replace '[^\\x20-\\x7E]', '.'" },
         { t: "note", kind: "warn", title: "the `$` in `$MFT` needs escaping in PowerShell", text: "Double-quoted strings interpolate <code>$MFT</code> as a variable reference and silently resolve to empty. Use a backtick (<code>`$MFT</code>) or single-quote the path segment." },
         { t: "note", kind: "info", title: "no $MFT in the collection, or the file is too big to be resident?", text: "This trick has two hard limits: it needs <code>$MFT</code> to have been collected, and it only works for files small enough to be resident. When either fails, the other place a missing file's <b>text</b> commonly survives is the Windows Search index — see <b>Windows Search Index Recovery (Windows.edb / ESE)</b>. Two different answers to the same question: \"the file wasn't collected, can I still read it?\"" },
+      ],
+    },
+    {
+      title: "MFTECmd --de <Entry>-<Sequence> — the tool-assisted way to dump one MFT record",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "Same resident-data concept as above, but instead of hand-rolling a byte-offset read, MFTECmd's <code>--de</code> flag dumps a single record's full attribute breakdown (parsed, not raw hex) directly to console — the every-day tool for this rather than a one-off script." },
+        { t: "cmd", label: "Dump one record by Entry-Sequence", code: "MFTECmd.exe -f \"<triage>\\C\\`$MFT\" --de <EntryNumber>-<SequenceNumber>" },
+        { t: "table", head: ["Attribute printed", "What it gives you"], rows: [
+          ["<b>$STANDARD_INFO (0x10)</b>", "The fakeable timestamps — compare against 0x30 below for timestomping"],
+          ["<b>$FILE_NAME (0x30)</b>", "Real timestamps + <code>Parent Entry-seq #</code>, a direct pointer to the parent directory's own MFT record"],
+          ["<b>$DATA</b>", "If <code>Resident: True</code>, the actual file bytes as hex + ASCII, right there in the dump"],
+        ]},
+        { t: "note", kind: "ok", title: "the record header's Offset: field answers \"hex offset on the filesystem\" tasks directly", text: "The very first line of output (<code>Entry-seq #: 0x..., <b>Offset: 0x3E90C00</b></code>) is the literal byte offset of that FILE record <i>within the <code>$MFT</code> file itself</i>. A CTF-style \"what's the hex offset of this file\" question is usually just asking for this value, no raw disk math required." },
+        { t: "note", kind: "warn", title: "-m is NOT the flag for this", text: "<code>-m</code> is for resolving <code>$J</code> (USN Journal) parent paths against a companion <code>$MFT</code> — a different use case entirely. Use <code>--de</code> to dump one record's own details." },
+      ],
+    },
+    {
+      title: "Timestomping detection: compare 0x10 vs 0x30, don't trust either one alone",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "Every file's <code>$STANDARD_INFORMATION</code> (0x10) and <code>$FILE_NAME</code> (0x30) attributes each carry their own set of four timestamps. Under normal operation they roughly agree. A mismatch, especially on Created, is one of the cheapest, most reliable timestomping signals available." },
+        { t: "table", head: ["Attribute", "Who can trivially change it", "Where it's stored"], rows: [
+          ["0x10 ($STANDARD_INFORMATION)", "Any process with normal file access — what Explorer/`dir` shows, and what timestomping tools like SetMace target", "Inside the file's own MFT record"],
+          ["0x30 ($FILE_NAME)", "Only updated by the OS on create/rename/move — much harder to convincingly fake", "In the <i>parent directory's</i> index entry for the file"],
+        ]},
+        { t: "note", kind: "danger", title: "trust 0x30, and corroborate independently", text: "If 0x10 says January and 0x30 says March, the file was almost certainly timestomped and the true creation time is the 0x30 value. Corroborate it a third way when possible — an event log entry, a paired process's own timestamp, or third-party file metadata (e.g. a public sandbox report's \"Last Saved\" field) — agreement across independent sources is what turns a suspicion into a confirmed finding worth writing up." },
+      ],
+    },
+    {
+      title: "RBCmd (Recycle Bin) — console output silently converts to local time, CSV doesn't",
+      blocks: [
+        { t: "txt", text: "RBCmd parses a Recycle Bin <code>$I</code> metadata file (deleted-on timestamp, original path, size) from its paired <code>$R</code> content file. Straightforward — except for one silent gotcha in how it displays time." },
+        { t: "cmd", label: "Parse one $I file", code: "RBCmd.exe -f \"<Recycle.Bin>\\<SID>\\$I<random>\" --csv \"<out>\" --csvf RecycleBin.csv" },
+        { t: "note", kind: "danger", title: "console text ≠ CSV value", text: "Console output showed <code>2024-03-18 21:34:16</code> for a deletion; the CSV for the <i>same record</i> showed <code>2024-03-19 04:34:16</code> — a 7-hour gap. The console print silently converts to the analysis machine's local timezone; the CSV preserves true UTC. Always pull the timestamp from the structured CSV output, never trust the human-readable console text for anything timezone-sensitive." },
+      ],
+    },
+    {
+      title: "Blocked locally? Search a distinctive leaked filename before brute-forcing the blocker",
+      blocks: [
+        { t: "txt", text: "A password-protected archive doesn't always need its password recovered. If an internal filename leaks (a tool's own error message when it fails to extract, an install log, a registry Install Source path), and that filename is distinctive enough, search it directly before spending time on local password-recovery artifacts." },
+        { t: "note", kind: "ok", title: "why this works", text: "Public sandboxes (ANY.RUN, Hybrid-Analysis, MalwareBazaar) index submitted samples by filename and hash. Even a sample from a custom/bespoke training scenario can turn out to have a public report already, complete with every hash pre-computed and file metadata that can independently corroborate other findings (e.g. a matching backdated timestamp)." },
+        { t: "note", kind: "warn", title: "VirusTotal won't help with an encrypted archive", text: "VT can't open a password-protected archive any more than you can — it'll only confirm \"this is an encrypted RAR/ZIP\". The win here comes from the sample having been <i>previously extracted and analyzed by someone else</i>, not from VT's own static scan of the still-locked container." },
       ],
     },
   ],
