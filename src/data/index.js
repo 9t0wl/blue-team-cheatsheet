@@ -4,6 +4,7 @@
 import wiresharkFilters from "./wireshark-filters.js";
 import nmapDetection from "./nmap-detection.js";
 import arpMitm from "./arp-mitm.js";
+import wireless80211Frames from "./wireless-80211-frames.js";
 import dnsSslMitm from "./dns-ssl-mitm.js";
 import snortIds from "./snort-ids.js";
 import webSecurityEssentials from "./web-security-essentials.js";
@@ -57,6 +58,7 @@ export const sections = [
   wiresharkFilters,
   nmapDetection,
   arpMitm,
+  wireless80211Frames,
   dnsSslMitm,
   snortIds,
   webSecurityEssentials,
