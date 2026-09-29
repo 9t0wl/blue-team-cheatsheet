@@ -49,6 +49,40 @@ export default {
     },
 
     {
+      title: "Log timestamps not matching your tools' timestamps? Solve for the offset, don't force the filter",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "Some Windows logs (notably <code>pfirewall.log</code>) record in <b>local system time</b>, while most EZ Tools output (LECmd, JLECmd, MFTECmd, EvtxECmd) defaults to <b>UTC</b>. A direct time-window filter at the UTC hour on a local-time log will come back empty even though the data is right there." },
+        { t: "steps", items: [
+          "Pick two events you already know the exact UTC timestamp of from other artifacts (e.g. a download moment, an install/execution burst).",
+          "Test a candidate offset (e.g. local = UTC + 5h) by predicting where those two events should land in local time.",
+          "If both predictions land on real activity bursts in the log, the offset is confirmed — now filter the log using local-time values.",
+        ]},
+        { t: "note", kind: "ok", title: "two independent confirmations beat one guess", text: "A single matching event could be coincidence. Two independently-known UTC events both landing on real log activity at the same tested offset is a strong confirmation, not a lucky guess — worth the extra step before trusting the offset for the rest of the investigation." },
+      ],
+    },
+
+    {
+      title: "High-volume logs: filter by rarity, not by the event type you expect",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "Some Windows event providers log dozens of Event IDs per single logical action (a DNS query alone can fire 5+ separate IDs — request sent, server-list, query completed, results, etc.), so the \"obvious\" Event ID to filter on is often also the noisiest one." },
+        { t: "note", kind: "warn", title: "worked example", text: "Hunting one bogus DGA domain inside a DNS Client Operational log: the request/completion/server-list Event IDs fired on <b>every single query</b> — 12,000+ rows in an 8-minute window, unusable by eye. Switching to a genuinely <b>rare</b> Event ID for that same provider (a few hundred occurrences across the entire 47,000-record file) surfaced the anomalous domain immediately." },
+        { t: "note", kind: "info", title: "how to find the rare ones", text: "Most EZ Tools print an Event ID → count summary to console when processing a log (EvtxECmd does this). Sort that list ascending by count before deciding what to filter on — the answer to \"find the one weird thing\" is rarely the ID with the highest count." },
+      ],
+    },
+
+    {
+      title: "Shellbags aren't just local folder history — they're the artifact of last resort for network/UNC paths",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "Shellbags record every folder a user has browsed in Explorer, local <b>or network</b>, and the record persists even after the folder is gone, deleted, or was only ever a temporary mount. When Prefetch, Amcache, and SMB connectivity logs all fail to produce a clean UNC path for something a user (or an analyst) accessed, Shellbags is the artifact that's actually built for that question." },
+        { t: "cmd", code: 'SBECmd.exe -d "...\\Users\\<user>" --csv <out>' },
+        { t: "note", kind: "ok", title: "worked example", text: "Chasing the network path an incident responder ran acquisition tools from: the tool's own Prefetch trace showed only local volume references, Amcache had no record, and an SMB log gave a server name but no share. Shellbags on the <i>victim's</i> own profile (recorded because his session was active during the browse) showed the complete chain — a Network location entry down through the analyst's separate machine, account, Desktop, and tools folder — an artifact nothing else in the case had needed until that point." },
+      ],
+    },
+
+    {
       title: "Which machine actually runs it",
       span2: true,
       blocks: [
