@@ -53,6 +53,7 @@ import filelessC2CredentialTheft from "./fileless-c2-credential-theft.js";
 import fileDbArtifactRecovery from "./file-db-artifact-recovery.js";
 import windowsSearchIndexRecovery from "./windows-search-index-recovery.js";
 import usbExecutionDeviceArtifacts from "./usb-execution-device-artifacts.js";
+import ntfsTimelineForensics from "./ntfs-timeline-forensics.js";
 
 export const sections = [
   wiresharkFilters,
@@ -107,6 +108,7 @@ export const sections = [
   fileDbArtifactRecovery,
   windowsSearchIndexRecovery,
   usbExecutionDeviceArtifacts,
+  ntfsTimelineForensics,
 ];
 
 export { config } from "./config.js";
