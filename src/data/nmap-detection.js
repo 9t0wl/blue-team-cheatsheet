@@ -49,6 +49,28 @@ export default {
       ],
     },
     {
+      title: "Flag-abuse scans — NULL / FIN / Xmas / ACK",
+      desc: "Odd flag combinations instead of a SYN. Filters use the exact-value form because you WANT that precise shape.",
+      span2: true,
+      blocks: [
+        { t: "table", head: ["Scan (nmap)", "Flags sent", "Open port reacts", "Closed port reacts"], rows: [
+          ["NULL  -sN", "none (tcp.flags = 0)", "silence", "RST"],
+          ["FIN  -sF", "FIN only (value 1)", "silence", "RST"],
+          ["Xmas  -sX", "FIN+PSH+URG (1+8+32 = 41)", "silence", "RST"],
+          ["ACK  -sA", "ACK only (value 16)", "RST (unfiltered) or silence", "RST"],
+        ]},
+        { t: "cmd", label: "NULL scan — no flags at all", code: "tcp.flags == 0x000" },
+        { t: "cmd", label: "FIN scan", code: "tcp.flags == 0x001" },
+        { t: "cmd", label: "Xmas scan — FIN + PSH + URG", code: "tcp.flags == 0x029" },
+        { t: "cmd", label: "ACK scan — needs the pattern, pure ACKs are everywhere in normal traffic", code: "tcp.flags == 0x010" },
+        { t: "cmd", label: "the closed-port fallout — RST flood back to one scanner", code: "tcp.flags.reset == 1" },
+        { t: "note", kind: "info", title: "why silence means open (NULL/FIN/Xmas)", text: "RFC 793 says a <b>closed</b> port must answer an unexpected segment with RST, while an <b>open</b> port silently drops it. So RST = closed, silence = open (or filtered, nmap reports <code>open|filtered</code>). These scans exploit that rule and slip past detection that only counts SYNs." },
+        { t: "note", kind: "warn", title: "ACK scan is about firewalls, not open/closed", text: "RST back = port is <b>unfiltered</b> (the packet reached the host). Silence or an ICMP error = <b>filtered</b> (something is dropping it). Its real use is mapping firewall rules and telling stateless filters from stateful ones." },
+        { t: "note", kind: "danger", title: "course wording that is loose", text: "\"SYN scan\" and \"SYN stealth scan\" are the <b>same</b> technique (<code>-sS</code>, half-open). The contrasting case is the full connect scan <code>-sT</code>. Also Xmas sets <b>FIN, PSH, URG</b>, not literally every flag." },
+        { t: "note", kind: "ok", title: "generic tells for any of these", text: "One source hitting many ports (or many hosts), an abnormal flag mix for the traffic type, and a large RST volume returning to that single source. Decoys and random sources can hide the true scanner (see IP &amp; TCP Layer Attacks)." },
+      ],
+    },
+    {
       title: "ICMP type/code quick ref",
       blocks: [
         { t: "table", head: ["Type", "Code", "Meaning"], rows: [

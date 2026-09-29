@@ -1,6 +1,6 @@
 export default {
   id: "tunnelling",
-  title: "Wireshark — Tunnelling Traffic (ICMP & DNS)",
+  title: "Wireshark — Tunnelling Traffic (ICMP, DNS, Telnet & UDP)",
   src: "Wireshark: Traffic Analysis",
   icon: "🕳️",
   cards: [
@@ -44,6 +44,69 @@ export default {
         { t: "note", kind: "danger", title: "reading the structure", text: "3 near-maximal hex-encoded labels (~63 bytes each, the DNS label ceiling) chained before the real domain <code>dataexfil.com</code>. Each label = one chunk of exfiltrated data; the attacker's own authoritative nameserver for that domain receives, logs, and decodes every query." },
         { t: "note", kind: "warn", title: "why MX/CNAME instead of plain A", text: "Real tools (<code>dnscat2</code>, <code>iodine</code>) rotate record types — some carry more payload per response, and rotation helps the traffic blend in / route around resolvers that restrict certain query types. Don't assume tunneling only rides on TXT or A." },
         { t: "txt", text: "<b>Answer:</b> suspicious main domain = <code>dataexfil[.]com</code> (defanged). The random subdomain is the payload; the registrable domain (last two labels) is the actual answer to \"which domain.\"" },
+      ],
+    },
+    {
+      title: "ICMP tunnel — more tells beyond size",
+      blocks: [
+        { t: "table", head: ["Trait", "Normal ping", "Tunnel"], rows: [
+          ["Data length", "48 bytes (98 on wire)", "Larger, or fragmented"],
+          ["ICMP id", "Fixed per session", "Often 0x0000, or constant on every packet"],
+          ["ICMP seq", "Counts 1, 2, 3", "Stuck at 0/0"],
+          ["Direction", "Small request, echo back", "Payload in BOTH request and reply"],
+          ["Cadence", "Bursty, short", "Regular heartbeat (about 1 per second) plus bursts"],
+        ]},
+        { t: "note", kind: "danger", title: "read the payload — a whole protocol can ride inside", text: "In the hex/ASCII pane of a reassembled reply, a full <code>HTTP/1.1 200 OK</code> response with <code>Content-Disposition: attachment; filename=...tgz</code> was visible: a file download carried inside ICMP echo replies. Always look at the bytes, not just the size." },
+        { t: "cmd", label: "decode a base64 payload copied from the data field", code: "echo '<string>' | base64 -d" },
+        { t: "note", kind: "warn", text: "Base64 needs a whole unit starting on a boundary. A mid-buffer slice decodes to garbage; copy one clean repetition." },
+      ],
+    },
+    {
+      title: "DNS — record types, decode layers, enumeration",
+      span2: true,
+      blocks: [
+        { t: "table", head: ["Filter", "Finds"], rows: [
+          ["dns.qry.type == 10", "NULL records. Almost never legitimate; iodine-style tunnels use them"],
+          ["dns.qry.type == 16", "TXT records. Data smuggling, also SPF/verification noise"],
+          ["dns.qry.type == 255", "ANY queries. Enumeration, or amplification when spoofed"],
+          ["dns.qry.type == 252", "AXFR zone transfer requests. Asks for the whole zone"],
+          ["dns.flags.rcode == 3", "NXDOMAIN storms. Flooding or subdomain guessing"],
+        ]},
+        { t: "note", kind: "info", title: "base64 layer tells for flag-style or HTB text", text: "One layer of <code>HTB{...}</code> starts <code>SFRC</code>. Two layers start <code>U0ZSQ</code>. Three layers start <code>VTBaU</code>. Seeing the prefix tells you how many decodes to chain (CyberChef: chain From Base64, keep Remove non-alphabet chars on)." },
+        { t: "note", kind: "warn", title: "enumeration vs tunneling", text: "<b>Enumeration</b> = many queries from one host, guessed subdomains, ANY/PTR/AXFR types. <b>Tunneling</b> = payload in the names or record data (long high-entropy labels, TXT/NULL, blobs), often modest volume to one parent domain. Also watch IPFS gateway lookups (<code>cloudflare-ipfs.com/ipfs/...</code>), used to host payloads peer-to-peer." },
+      ],
+    },
+    {
+      title: "Telnet, IPv6 and UDP as tunnels",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "Same idea, different carrier. <b>Protocols are not tied to ports</b>: identify by content, not by port number." },
+        { t: "cmd", label: "Telnet on the standard port, and on any odd port", code: "telnet\ntcp.port == 9999" },
+        { t: "cmd", label: "Telnet over IPv6 for one host (fill in the address)", code: "(ipv6.src_host == <ipv6> or ipv6.dst_host == <ipv6>) and telnet" },
+        { t: "cmd", label: "any UDP that is not an expected service", code: "udp and !dns and !dhcp and !snmp" },
+        { t: "table", head: ["Carrier", "Why attackers use it", "How to read it"], rows: [
+          ["Telnet, any port", "Plaintext, easy tunnel; port can be changed", "Follow TCP Stream. Real Telnet negotiates options (0xFF IAC) at the start"],
+          ["IPv6 link-local", "Unwatched side channel on an IPv4-only network", "Follow TCP Stream; ICMPv6 neighbor discovery around it is a hint"],
+          ["UDP", "Connectionless (no handshake), often monitored less than TCP", "Follow UDP Stream; sustained uniform flows to an unknown port"],
+        ]},
+        { t: "note", kind: "info", title: "legitimate UDP to baseline against", text: "Real-time media and gaming, DNS, DHCP, SNMP, TFTP. Anything outside that list, or unusual volume to one peer, needs a look." },
+        { t: "note", kind: "ok", title: "EUI-64 link-local addresses leak the MAC", text: "<code>fe80::468a:5bff:fe95:682a</code> has <code>ff:fe</code> in the middle; drop it, flip the universal/local bit of the first byte (<code>46</code> becomes <code>44</code>) and you get <code>44:8a:5b:95:68:2a</code>. The initiator's random-looking address is the privacy-style variant, which does not embed a MAC." },
+      ],
+    },
+    {
+      title: "Classify it: flooding vs tunneling vs Smurf vs amplification",
+      desc: "From the Skills Assessment. Shape first, payload second, then eliminate.",
+      span2: true,
+      blocks: [
+        { t: "table", head: ["Attack", "Shape", "Payload / tell"], rows: [
+          ["ICMP flooding", "One source to one target at a high rate", "Ordinary small echoes, nothing meaningful inside"],
+          ["ICMP tunneling", "Two peers, request and reply pairs, heartbeat", "Fixed id, seq 0/0, varying sizes, readable or encoded data"],
+          ["ICMP Smurf", "Victim receives echo REPLIES it never requested", "No matching request from the victim; reflectors reply to a spoofed source"],
+          ["DNS flooding", "Huge query volume at a server", "Random or non-existent names, NXDOMAIN storm, no payload"],
+          ["DNS amplification", "Small spoofed ANY queries, big answers to a victim", "Response size much larger than query, answers land on a host that never asked"],
+          ["DNS tunneling", "Two hosts, query/response pairs", "NULL/TXT types, long random labels under one parent domain, payload in answers"],
+        ]},
+        { t: "note", kind: "danger", title: "verify against the data, not the textbook", text: "Course Smurf file had exactly ONE reflector (Statistics, Conversations, then Endpoints showed one pair), even though the theory describes many. Count with <code>Statistics &gt; Conversations</code> and <code>Endpoints</code> before assuming a pattern. Also: answer with the option text exactly as written." },
       ],
     },
   ],
