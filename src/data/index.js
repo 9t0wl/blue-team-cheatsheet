@@ -41,6 +41,7 @@ import linuxPersistence from "./linux-persistence.js";
 import malwareClassification from "./malware-classification.js";
 import malwareAnalysisIntro from "./malware-analysis-intro.js";
 import peStructureWindowsInternals from "./pe-structure-windows-internals.js";
+import assemblyQuickReference from "./assembly-quick-reference.js";
 import jsDeobfuscation from "./js-deobfuscation.js";
 import fileHashThreatIntel from "./file-hash-threat-intel.js";
 import ipDomainThreatIntel from "./ip-domain-threat-intel.js";
@@ -99,6 +100,7 @@ export const sections = [
   malwareClassification,
   malwareAnalysisIntro,
   peStructureWindowsInternals,
+  assemblyQuickReference,
   jsDeobfuscation,
   fileHashThreatIntel,
   ipDomainThreatIntel,
