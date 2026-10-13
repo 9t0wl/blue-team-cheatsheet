@@ -9,6 +9,8 @@ import ipTcpLayerAttacks from "./ip-tcp-layer-attacks.js";
 import webTrafficAnomalies from "./web-traffic-anomalies.js";
 import dnsSslMitm from "./dns-ssl-mitm.js";
 import snortIds from "./snort-ids.js";
+import suricataFundamentals from "./suricata-fundamentals.js";
+import idsRuleWriting from "./ids-rule-writing.js";
 import webSecurityEssentials from "./web-security-essentials.js";
 import detectingWebAttacks from "./detecting-web-attacks.js";
 import detectingWebShells from "./detecting-web-shells.js";
@@ -19,6 +21,7 @@ import tunnelling from "./tunnelling.js";
 import ftpAnalysis from "./ftp-analysis.js";
 import httpAnalysis from "./http-analysis.js";
 import zeekZuiTriage from "./zeek-zui-triage.js";
+import zeekNetworkHunting from "./zeek-network-hunting.js";
 import exfilQuickref from "./exfil-quickref.js";
 import httpsDecrypt from "./https-decrypt.js";
 import cleartextCreds from "./cleartext-creds.js";
@@ -42,6 +45,9 @@ import malwareClassification from "./malware-classification.js";
 import malwareAnalysisIntro from "./malware-analysis-intro.js";
 import peStructureWindowsInternals from "./pe-structure-windows-internals.js";
 import assemblyQuickReference from "./assembly-quick-reference.js";
+import malwareStaticTriage from "./malware-static-triage.js";
+import malwareDynamicDebuggingLab from "./malware-dynamic-debugging-lab.js";
+import yaraSigmaSysmon from "./yara-sigma-sysmon.js";
 import jsDeobfuscation from "./js-deobfuscation.js";
 import fileHashThreatIntel from "./file-hash-threat-intel.js";
 import ipDomainThreatIntel from "./ip-domain-threat-intel.js";
@@ -68,6 +74,8 @@ export const sections = [
   webTrafficAnomalies,
   dnsSslMitm,
   snortIds,
+  suricataFundamentals,
+  idsRuleWriting,
   webSecurityEssentials,
   detectingWebAttacks,
   detectingWebShells,
@@ -78,6 +86,7 @@ export const sections = [
   ftpAnalysis,
   httpAnalysis,
   zeekZuiTriage,
+  zeekNetworkHunting,
   exfilQuickref,
   httpsDecrypt,
   cleartextCreds,
@@ -101,6 +110,9 @@ export const sections = [
   malwareAnalysisIntro,
   peStructureWindowsInternals,
   assemblyQuickReference,
+  malwareStaticTriage,
+  malwareDynamicDebuggingLab,
+  yaraSigmaSysmon,
   jsDeobfuscation,
   fileHashThreatIntel,
   ipDomainThreatIntel,
