@@ -1,120 +1,218 @@
 export default {
   id: "yara-sigma-sysmon",
-  title: "YARA, Sigma and Sysmon Detections",
-  src: "HTB Academy: Introduction To Malware Analysis (detection rules)",
+  title: "YARA, Sigma & Event Log Hunting",
+  src: "HTB Academy: YARA & Sigma For SOC Analysts (CDSA Path)",
   icon: "📜",
   cards: [
     {
       title: "YARA vs Sigma in one line",
       span2: true,
       blocks: [
-        { t: "table", head: ["", "YARA", "Sigma"], rows: [
-          ["matches", "<b>files, processes in memory</b> by content (what the file <i>looks like</i>)", "<b>log events</b> by behavior (what it <i>does</i>)"],
-          ["format", "YARA rule language", "YAML, converted to Splunk, Elastic, Sentinel and others"],
-          ["good for", "classifying samples and families even when the filename changes", "SIEM detections, one rule shared across platforms"],
+        { t: "table", head: ["", "YARA (The Mugshot)", "Sigma (The Security Badge Log)"], rows: [
+          ["inspects", "<b>Files on disk & raw process memory</b> (what the malware <i>looks like</i>)", "<b>Log event streams</b> (what the attacker <i>does</i>)"],
+          ["format", "YARA rule language (text or compiled <code>.yrc</code>)", "YAML format, converted to Splunk SPL, Elastic KQL, Sentinel, etc."],
+          ["sweet spot", "Classifying malware families, unpacking shellcode, memory dumps", "SIEM detections, behavioral alerting across heterogeneous log sources"],
+          ["evasion", "Packers, crypters, code obfuscation, encrypted payloads", "Log tampering, living-off-the-land without generating target events"],
         ]},
-        { t: "note", kind: "info", title: "analysis feeds rules", text: "Analysis works out how one burglar operates, a rule is the wanted poster. Strings, imports and IOCs from static work become YARA. Behavior seen in Procmon, Wireshark and Sysmon becomes Sigma and network rules." },
+        { t: "note", kind: "info", title: "defense-in-depth workflow", text: "Static analysis and sandboxing feed YARA signatures. Dynamic behavior observed in Sysmon, EVTX, and network logs feeds Sigma rules." },
       ],
     },
     {
-      title: "YARA anatomy",
+      title: "YARA Rule Anatomy & String Modifiers",
       span2: true,
       blocks: [
-        { t: "cmd", label: "smallest useful rule", code: `rule Shell_Sandbox_Detection {
+        { t: "cmd", label: "standard rule template", code: `rule APT_Implant_Detector {
+    meta:
+        description = "Detects in-memory and disk implants"
+        author = "9t0wl / 221B Baker Street SOC"
+        reference = "https://attack.mitre.org"
     strings:
-        $sandbox_string = "Sandbox detected"
+        $ascii_str  = "Sandbox detected" ascii
+        $wide_str   = "powershell.exe" wide nocase
+        $hex_stub   = { fc e8 8? 00 00 00 60 }       // wildcards: 8? or ??
+        $hex_jump   = { 64 8b [0-4] 30 }             // jumps: [0-4] bytes
+        $xor_str    = "http://malicious.c2" xor
     condition:
-        $sandbox_string
+        uint16(0) == 0x5a4d and                      // MZ header (Windows PE)
+        uint16(uint32(0x3c)) == 0x4550 and           // PE pointer verification
+        filesize < 5MB and
+        (2 of ($ascii*, $wide*) or $hex_stub)
 }` },
-        { t: "table", head: ["Block", "Job"], rows: [
-          ["<code>meta:</code>", "description, author, reference, date, sample hash (labels, not matching)"],
-          ["<code>strings:</code>", "the patterns: <code>$name = \"text\"</code> (ascii, wide, nocase, fullword), hex, or regex"],
-          ["<code>condition:</code>", "the logic: which strings, how many, plus file checks"],
+        { t: "table", head: ["Modifier", "Meaning", "When to Use"], rows: [
+          ["<code>ascii</code>", "Standard 1-byte ASCII characters", "Default string matching"],
+          ["<code>wide</code>", "2-byte UTF-16LE characters", "Crucial for Windows filenames, Registry paths, and PowerShell strings"],
+          ["<code>nocase</code>", "Case-insensitive matching", "Handles randomized capitalization (e.g., <code>pOwErShElL</code>)"],
+          ["<code>fullword</code>", "Matches only delimited by non-alphanumeric chars", "Prevents false positives on substrings (e.g., matching <code>cat</code> inside <code>catalog</code>)"],
+          ["<code>xor</code>", "Searches all 255 single-byte XOR keys", "Catches obfuscated strings and simple XORed C2 beacon domains"],
+          ["<code>hex ?? / 8?</code>", "Byte & nibble wildcards", "Accommodates dynamic offsets and variable registers in shellcode"],
         ]},
-        { t: "cmd", label: "scan syntax: yara <rules file> <file or directory>", code: "yara /home/htb-student/yarGen-0.23.4/yargen_rules.yar /home/htb-student/Samples/MalwareAnalysis/\n# prints:  <rule name> <matching file>" },
       ],
     },
     {
-      title: "yarGen: generate a first draft, then tune it",
+      title: "Advanced YARA Modules: PE Internals & Entropy (math)",
       span2: true,
       blocks: [
-        { t: "txt", text: "yarGen extracts strings from a sample and <b>removes strings seen in a large goodware database</b>, so the rule keys on what is unusual. The output is a starting point, <b>not a finished rule</b>." },
-        { t: "cmd", label: "workflow", code: "mkdir Test && cp shell.exe Test/            # ONLY the sample(s) you want a rule for\ncd ~/yarGen-0.23.4\nsudo python3 yarGen.py -m /home/htb-student/Samples/MalwareAnalysis/Test/\ncat yargen_rules.yar" },
-        { t: "cmd", label: "the generated condition (shell.exe)", code: `condition:
-   uint16(0) == 0x5a4d and filesize < 60KB and
-   1 of ($x*) and 4 of them` },
-        { t: "table", head: ["Piece", "Reads as"], rows: [
-          ["<code>uint16(0) == 0x5a4d</code>", "first two bytes are <code>MZ</code> (little-endian 0x5a4d): a Windows executable"],
-          ["<code>filesize &lt; 60KB</code>", "small file, keeps big legitimate files out"],
-          ["<code>1 of ($x*)</code>", "at least one of the very distinctive <code>$x</code> strings"],
-          ["<code>4 of them</code>", "at least four of all strings match"],
+        { t: "cmd", label: "high-entropy resource & imphash hunting (wiper / packer)", code: `import "pe"
+import "math"
+
+rule Suspicious_Packed_File_Wiper {
+    meta:
+        description = "Detects packed payloads, wipers, and stolen imphash"
+    strings:
+        $dos_stub = "This program cannot be run in DOS mode."
+    condition:
+        uint16(0) == 0x5A4D and filesize < 1MB and
+        pe.number_of_sections > 4 and
+        pe.number_of_signatures == 0 and             // Unsigned binary
+        (pe.imphash() == "414bbd566b700ea021cfae3ad8f4d9b9" or
+         for any i in (0..pe.number_of_resources - 1): (
+             math.entropy(pe.resources[i].offset, pe.resources[i].length) > 7.8
+         ))
+}` },
+        { t: "table", head: ["Function / Property", "Forensic Value"], rows: [
+          ["<code>pe.imphash()</code>", "Import Hash: tracks malware variants sharing identical API import tables even when code is scrambled"],
+          ["<code>math.entropy(offset, len) > 7.8</code>", "Detects encrypted, compressed, or packed payloads in PE resources (Shamoon, Stonedrill)"],
+          ["<code>pe.number_of_signatures == 0</code>", "Ensures the file is unsigned, filtering out signed Microsoft and third-party binaries"],
+          ["<code>pe.entry_point == ...</code>", "Validates whether the execution entry point points to suspicious or non-standard sections"],
         ]},
-        { t: "note", kind: "ok", title: "why several clues", text: "One common word can appear in a harmless file. Four unusual strings together almost never do." },
-        { t: "note", kind: "warn", title: "hand-tune the draft", text: "Drop weak strings yarGen kept (<code>connect</code>, <code>socket</code>, \"Goodware String - occured 429 times\", compiler noise like pseudo-relocation messages). Make <code>$x</code> the strongest IOCs (domain, URL, user agent, IP). Add the shellcode stub as hex (<code>fc 48 83 e4 f0 e8 c0 00 00 00 41 51 41 50 52 51</code>) and keep the MZ check." },
-        { t: "cmd", label: "good strings to key on for shell.exe (from analysis)", code: `$x1 = "ms-windows-update.com" ascii
-$s2 = "iuqerfsodp9ifjaposdfjhgosurijfaewrwergwea.com" ascii
-$s3 = "Windows-Update/7.6.7600.256" ascii
-$s4 = "45.33.32.156" ascii
-$s5 = "/k ping 127.0.0.1 -n 5" ascii
-$s6 = "AQAPRQVH1" ascii` },
       ],
     },
     {
-      title: "Sigma skeleton (and two fixes to the course example)",
+      title: "Live Windows Process & Memory Forensics with YARA",
       span2: true,
       blocks: [
-        { t: "table", head: ["Field", "Job"], rows: [
-          ["<code>title</code>, <code>status</code>, <code>description</code>", "name, maturity (experimental), what it finds"],
-          ["<code>logsource</code>", "<b>which log</b> to search (category, product, service)"],
-          ["<code>detection</code>", "<code>selection</code> = field/value tests, <code>condition</code> = how they combine"],
-          ["<code>level</code>", "severity: informational, low, medium, high, critical"],
-          ["<code>falsepositives</code>", "harmless activity that could trigger it"],
-        ]},
-        { t: "cmd", label: "corrected: file drop of svchost.exe in a user's Temp folder", code: `title: Suspicious svchost.exe Dropped In User Temp
+        { t: "cmd", label: "PowerShell live process sweep across all running PIDs", code: `# Scan every running process PID with a YARA rule
+Get-Process | ForEach-Object { 
+    $pid_num = $_.Id
+    & "yara64.exe" "C:\\Rules\\yara\\meterpreter_shellcode.yar" $pid_num 2>$null
+}` },
+        { t: "cmd", label: "Volatility 3 / 2.6 yarascan on raw memory dumps (.raw / .vmem)", code: `# Offline memory dump inspection with PID & process attribution
+vol.py -f /path/to/memory.raw yarascan -U "delete shadows"
+
+# Output reveals the owning process directly:
+# Rule: r1
+# Owner: Process @WanaDecryptor@ Pid 3200
+# 0x00420fe4: delete shadows /all /quiet & bcdedit ...` },
+        { t: "cmd", label: "SilkETW real-time detection (attaching YARA to ETW event streams)", code: `# Inspect PowerShell script blocks in real time
+.\\SilkETW.exe -t user -pn Microsoft-Windows-PowerShell -ot file -p ./etw_ps.json -l verbose -y C:\\Rules\\yara -yo Matches
+
+# Inspect DNS queries for C2 domain resolution & killswitch domains
+.\\SilkETW.exe -t user -pn Microsoft-Windows-DNS-Client -ot file -p ./etw_dns.json -l verbose -y C:\\Rules\\yara -yo Matches` },
+      ],
+    },
+    {
+      title: "Sigma Rule Architecture & Anatomy",
+      span2: true,
+      blocks: [
+        { t: "cmd", label: "complete sigma rule template", code: `title: Suspicious svchost.exe Process Creation
+id: fa34b441-961a-42fa-a100-ecc28c886725
 status: experimental
-description: A process created svchost.exe in a user Temp folder (real svchost lives in System32)
+description: Detects svchost.exe spawned from non-system paths or unusual parents
+references:
+    - https://attack.mitre.org/techniques/T1036/005/
+author: 9t0wl / 221B Baker Street SOC
+date: 2026-10-16
+tags:
+    - attack.defense_evasion
+    - attack.t1036.005
 logsource:
-    category: file_event
+    category: process_creation
     product: windows
 detection:
-    selection:
-        TargetFilename|endswith: '\\AppData\\Local\\Temp\\svchost.exe'
-    condition: selection
+    selection_proc:
+        Image|endswith: '\\svchost.exe'
+    selection_susp_path:
+        Image|contains:
+            - '\\AppData\\Local\\Temp\\'
+            - '\\Users\\Public\\'
+            - '\\PerfLogs\\'
+    filter_legit_parent:
+        ParentImage|endswith: '\\services.exe'
+    condition: selection_proc and selection_susp_path and not filter_legit_parent
 falsepositives:
-    - Legitimate installers extracting files to Temp
+    - Rare third-party installers
 level: high` },
-        { t: "note", kind: "warn", title: "what was off in the course example", text: "1) It used <code>category: process_creation</code> with <code>TargetFilename</code>, which is a <b>file creation</b> field (Sysmon Event 11, category <code>file_event</code>). Process creation fields are <code>Image</code>, <code>CommandLine</code>, <code>ParentImage</code>. 2) The pattern had doubled backslashes inside a single-quoted string, which is probably unnecessary. Verify against the Sigma spec when you convert." },
-      ],
-    },
-    {
-      title: "Sysmon events: the log source behind the rules",
-      span2: true,
-      blocks: [
-        { t: "table", head: ["Event ID", "Meaning", "What shell.exe produced"], rows: [
-          ["<b>1</b> Process create", "a process started", "<code>Image: ...\\AppData\\Local\\Temp\\svchost.exe</code>, <code>CommandLine</code> with a wallet-looking argument, <code>ParentImage: ...\\Downloads\\shell.exe</code>, <code>IntegrityLevel: Medium</code>"],
-          ["<b>3</b> Network connection", "a process connected out", "<code>shell.exe</code> TCP to the INetSim host on 80, and a second connect to <code>45.33.32.156:31337</code>"],
-          ["<b>10</b> Process access", "one process opened another", "<code>SourceImage: shell.exe</code>, <code>TargetImage: ...\\notepad.exe</code>, <code>GrantedAccess: 0x1F3FFF</code> (broad: write memory, create thread). <b>Not configured on the module's Windows targets</b>"],
-          ["<b>11</b> File create", "a file was written", "<code>shell.exe</code> created <code>C:\\Users\\LabUser\\AppData\\Local\\Temp\\svchost.exe</code>"],
-          ["<b>13</b> Registry value set", "a registry value was written", "the <code>...\\CurrentVersion\\Run</code> value <code>WindowsUpdater</code>"],
+        { t: "table", head: ["Section", "Requirement", "Job / Logic"], rows: [
+          ["<code>title</code>", "Required", "Short descriptive name of the alert (max 256 chars)"],
+          ["<code>logsource</code>", "Required", "<b>Where</b> to search: <code>category</code> (process_creation), <code>product</code> (windows), <code>service</code> (sysmon, security)"],
+          ["<code>detection</code>", "Required", "Search-identifiers (lists, maps) + boolean <code>condition</code>"],
+          ["<code>status</code>", "Optional", "Maturity: <code>experimental</code> (lab only), <code>test</code> (few systems), <code>stable</code> (production ready)"],
+          ["<code>level</code>", "Optional", "Severity: <code>informational</code>, <code>low</code>, <code>medium</code>, <code>high</code>, <code>critical</code>"],
         ]},
       ],
     },
     {
-      title: "Detection ideas from the module (behavior to log to rule)",
+      title: "Sigma Detection Logic: Modifiers, Lists (OR) vs Maps (AND)",
       span2: true,
       blocks: [
-        { t: "table", head: ["Behavior", "Where it shows", "Idea"], rows: [
-          ["<code>svchost.exe</code> in a user Temp folder", "Sysmon 1 and 11", "<code>Image</code> or <code>TargetFilename</code> ends with <code>\\AppData\\Local\\Temp\\svchost.exe</code>. The real one is in <code>System32</code>"],
-          ["wrong parent for <code>svchost.exe</code>", "Sysmon 1", "<code>ParentImage</code> is not <code>services.exe</code>"],
-          ["remote process injection", "Sysmon 10", "user-folder program opens <code>notepad.exe</code> with a broad <code>GrantedAccess</code> such as <code>0x1F3FFF</code> or <code>0x1FFFFF</code>"],
-          ["LSASS dumping", "Sysmon 10 and 11", "<code>TargetImage</code> is <code>lsass.exe</code> from an unexpected source; a <code>.dmp</code> created outside crash-dump locations; <code>dbghelp.dll</code> loaded by a non-debugger. Hardening: RunAsPPL, Credential Guard"],
-          ["Run-key persistence", "Sysmon 13", "value written under <code>...\\CurrentVersion\\Run</code> by a user-folder process"],
-          ["fixed user agent", "proxy, Suricata, Zeek <code>http.log</code>", "prefix <code>Windows-Update/7.6.7600.256</code> or an old <code>MSIE 8.0</code> UA with the hostname appended"],
-          ["PE downloaded over HTTP", "network IDS", "response body starts <code>MZ</code> and contains <code>This program cannot be run in DOS mode</code>"],
-          ["DNS and connect anomalies", "DNS logs, Sysmon 3", "long random-looking <code>.com</code> lookups; connections to port <code>31337</code>"],
-          ["Bitcoin-wallet-style argument", "Sysmon 1 <code>CommandLine</code>", "a long base58 string passed to a program run from Temp"],
+        { t: "table", head: ["Structure", "YAML Syntax", "Boolean Logic", "Example"], rows: [
+          ["<b>List</b>", "Bulleted with dashes (<code>-</code>)", "<b>OR</b>", "<code>Image|endswith:</code><br><code>  - 'cmd.exe'</code><br><code>  - 'powershell.exe'</code>"],
+          ["<b>Map (Dict)</b>", "Key-Value pairs at same indent", "<b>AND</b>", "<code>Image|endswith: '\\wmic.exe'</code><br><code>CommandLine|contains: ' /node:'</code>"],
+          ["<code>\|contains</code>", "Wildcards both sides (<code>*val*</code>)", "Substring", "<code>CommandLine\|contains: 'mimikatz'</code>"],
+          ["<code>\|endswith</code>", "Wildcard at start (<code>*val</code>)", "Suffix", "<code>Image\|endswith: '\\mshta.exe'</code>"],
+          ["<code>\|startswith</code>", "Wildcard at end (<code>val*</code>)", "Prefix", "<code>ParentImage\|startswith: 'C:\\Windows\\Temp\\'</code>"],
+          ["<code>\|re</code>", "Regular expression pattern", "Regex", "<code>CommandLine\|re: '.{1000,}'</code> (long commands)"],
+          ["<code>\|all</code>", "Forces list to require all items", "<b>AND</b>", "<code>CommandLine\|contains\|all: ['downloadstring', 'http']</code>"],
+          ["<b>Aggregation</b>", "Piped into condition", "Threshold", "<code>condition: selection \| count(TargetUserName) by Workstation > 3</code>"],
         ]},
-        { t: "note", kind: "info", title: "good rules combine independent clues", text: "A single indicator is easy to dodge or to false-positive. Combine file location, parent, behavior and network evidence." },
+      ],
+    },
+    {
+      title: "Hunting EVTX with Chainsaw (Multi-Threaded Sigma Engine)",
+      span2: true,
+      blocks: [
+        { t: "txt", text: "<b>Chainsaw</b> is a standalone Rust CLI tool that concurrently sweeps raw Windows EVTX logs against Sigma rule packs using multi-threading, without needing a running SIEM." },
+        { t: "cmd", label: "core syntax", code: `# Hunt through EVTX logs using a Sigma rule or folder of rules
+.\\chainsaw.exe hunt C:\\Events\\ -s C:\\Rules\\sigma\\ --mapping .\\mappings\\sigma-event-logs-all-new.yml
+
+# Output to structured JSON for analysis pipelines
+.\\chainsaw.exe hunt C:\\Events\\lab_events.evtx -s C:\\Rules\\sigma\\ --mapping .\\mappings\\sigma-event-logs-all-new.yml --json -o results.json
+
+# Fast keyword search
+.\\chainsaw.exe search mimikatz -i C:\\Events\\` },
+        { t: "table", head: ["Field / Parameter", "Role in Triage"], rows: [
+          ["<code>hunt</code>", "Core execution mode: compiles and executes Sigma rules against EVTX files"],
+          ["<code>-s &lt;path&gt;</code>", "Path to a specific <code>.yml</code> rule or directory of rules"],
+          ["<code>--mapping &lt;path&gt;</code>", "<b>The Rosetta Stone:</b> maps Sigma field names (e.g. <code>NewProcessName</code>) to Windows Event XML fields. If omitted or outdated, detections will return 0!"],
+          ["<code>--full</code>", "Prints unclipped command lines, scripts, and complete payloads in terminal"],
+        ]},
+        { t: "note", kind: "ok", title: "key chainsaw detections from the field", text: "<b>Defender Exclusions:</b> <code>posh_ps_win_defender_exclusions_added.yml</code> on Event 4104 catches <code>Set-MpPreference -ExclusionPath</code>.<br><b>Shadow Copy Wiping:</b> <code>posh_ps_susp_win32_shadowcopy.yml</code> catches ransomware running <code>Get-WmiObject Win32_Shadowcopy \| ForEach-Object {$_.Delete();}</code>." },
+      ],
+    },
+    {
+      title: "Sigma to Splunk SPL Translation (sigmac & pySigma)",
+      span2: true,
+      blocks: [
+        { t: "cmd", label: "translating sigma rules into Splunk SPL queries", code: `# Convert Sigma YAML to Splunk SPL using sigmac / pySigma
+cd C:\\Tools\\sigma-0.21\\tools
+python sigmac -t splunk C:\\Rules\\sigma\\file_event_win_app_dropping_archive.yml -c .\\config\\splunk-windows.yml
+
+# pySigma (modern syntax)
+sigma convert -t splunk -p sysmon ./rules/detection_rule.yml` },
+        { t: "table", head: ["Technique", "Sigma Rule Focus", "Generated Splunk SPL Pattern"], rows: [
+          ["<b>LSASS MiniDump</b> (Living-off-the-Land)", "<code>comsvcs.dll</code> called via <code>rundll32.exe</code> (Sysmon 10)", "<code>(TargetImage=\"*\\\\lsass.exe\" SourceImage=\"*\\\\rundll32.exe\" CallTrace=\"*comsvcs.dll*\")</code>"],
+          ["<b>Process Injection</b> (Hollowing / Stager)", "<code>notepad.exe</code> spawning CLI / PowerShell (Sysmon 1)", "<code>(ParentImage=\"*\\\\notepad.exe\" (Image=\"*\\\\powershell.exe\" OR Image=\"*\\\\cmd.exe\"))</code>"],
+          ["<b>SharpHound AD Exfil</b>", "Office/tool process dropping <code>.zip</code> or <code>.rar</code> (Sysmon 11)", "<code>(Image=\"*\\\\sharphound.exe\" (TargetFilename=\"*.zip\" OR TargetFilename=\"*.rar\"))</code>"],
+          ["<b>Failed NTLM Logins</b>", "Rapid-fire credential testing (Security 4776)", "<code>EventCode=4776 Status=\"0xc0000064\" \| stats count by Workstation \| where count > 3</code>"],
+        ]},
+        { t: "note", kind: "info", title: "time range tip in splunk", text: "When verifying newly translated Sigma rules in Splunk Web, always remember to set the time range dropdown to <b>All time</b> so historical event logs are included." },
+      ],
+    },
+    {
+      title: "Sysmon Telemetry: Key Event IDs Behind Rules",
+      span2: true,
+      blocks: [
+        { t: "table", head: ["Event ID", "Category", "Critical Fields to Hunt"], rows: [
+          ["<b>1</b>", "Process Create", "<code>Image</code>, <code>CommandLine</code>, <code>ParentImage</code>, <code>ParentCommandLine</code>, <code>IntegrityLevel</code>, <code>User</code>"],
+          ["<b>3</b>", "Network Connect", "<code>SourceIp</code>, <code>DestinationIp</code>, <code>DestinationPort</code>, <code>Image</code> (catches C2 beacons)"],
+          ["<b>7</b>", "Image Loaded", "<code>ImageLoaded</code>, <code>Signed</code>, <code>SignatureStatus</code> (catches malicious DLL sideloading)"],
+          ["<b>8</b>", "CreateRemoteThread", "<code>SourceImage</code>, <code>TargetImage</code>, <code>StartAddress</code> (catches classic process injection)"],
+          ["<b>10</b>", "Process Access", "<code>SourceImage</code>, <code>TargetImage</code>, <code>GrantedAccess</code> (<code>0x1010</code>, <code>0x1410</code>, <code>0x1fffff</code> for LSASS dumping)"],
+          ["<b>11</b>", "File Create", "<code>TargetFilename</code>, <code>Image</code> (catches ransomware dropping payloads & BloodHound zips)"],
+          ["<b>12 / 13 / 14</b>", "Registry Event", "<code>TargetObject</code>, <code>Details</code> (catches Run-key persistence, UAC bypasses)"],
+          ["<b>22</b>", "DNS Query", "<code>QueryName</code>, <code>QueryResults</code> (catches DNS tunneling and DGA domains)"],
+          ["<b>4104</b>", "PowerShell ScriptBlock", "<code>ScriptBlockText</code>, <code>ScriptBlockId</code> (catches deobfuscated in-memory execution)"],
+        ]},
       ],
     },
   ],
